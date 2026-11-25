@@ -9,6 +9,7 @@ describe('parseRoute', () => {
     ['/sign-in', { name: 'sign-in' }],
     ['/plants/new', { name: 'new-plant' }],
     ['/plants/abc-123/edit', { name: 'edit-plant', id: 'abc-123' }],
+    ['/plants/abc-123/conflict', { name: 'conflict', id: 'abc-123' }],
     ['/plants/abc-123', { name: 'not-found' }],
     ['/plants/abc/edit/more', { name: 'not-found' }],
     ['/settings', { name: 'not-found' }],
@@ -23,6 +24,7 @@ describe('pathFor', () => {
     { name: 'plants' },
     { name: 'new-plant' },
     { name: 'edit-plant', id: 'a b/c' },
+    { name: 'conflict', id: 'x' },
   ])('round-trips %o', (route) => {
     expect(parseRoute(pathFor(route))).toEqual(route);
   });

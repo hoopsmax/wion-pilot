@@ -30,7 +30,9 @@ export interface SproutData {
   conflicts: Conflict[];
   /** An unexpected sync failure, shown to the user instead of being hidden. */
   problem: string | undefined;
-  save(plantId: string | undefined, fields: PlantFields): Promise<void>;
+  save: (plantId: string | undefined, fields: PlantFields) => Promise<void>;
+  /** Closes a conflict with the values the user chose. */
+  decide: (plantId: string, fields: PlantFields) => Promise<void>;
 }
 
 const SproutDataContext = createContext<SproutData | undefined>(undefined);
@@ -150,6 +152,16 @@ export function SproutDataProvider({ session, onUnauthorized, children }: Provid
     [store, runSync],
   );
 
+  const decide = useCallback(
+    async (plantId: string, fields: PlantFields) => {
+      if (!store) throw new Error('Sprout data is not loaded yet.');
+      await store.decideConflict(plantId, fields);
+      setState(await store.load());
+      void runSync();
+    },
+    [store, runSync],
+  );
+
   const value = useMemo((): SproutData => {
     const waiting = state?.outbox.length ?? 0;
     const status: SyncStatus = !online
@@ -167,8 +179,9 @@ export function SproutDataProvider({ session, onUnauthorized, children }: Provid
       conflicts: state?.conflicts ?? [],
       problem,
       save,
+      decide,
     };
-  }, [state, online, running, problem, hasSynced, save]);
+  }, [state, online, running, problem, hasSynced, save, decide]);
 
   return <SproutDataContext.Provider value={value}>{children}</SproutDataContext.Provider>;
 }

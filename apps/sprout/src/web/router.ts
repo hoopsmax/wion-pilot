@@ -3,6 +3,7 @@ export type Route =
   | { name: 'plants' }
   | { name: 'new-plant' }
   | { name: 'edit-plant'; id: string }
+  | { name: 'conflict'; id: string }
   | { name: 'not-found' };
 
 /** Turns a URL path into a screen. Keeping this pure makes every route easy to unit-test. */
@@ -18,6 +19,9 @@ export function parseRoute(pathname: string): Route {
   if (parts.length === 3 && second !== undefined && third === 'edit') {
     return { name: 'edit-plant', id: decodeURIComponent(second) };
   }
+  if (parts.length === 3 && second !== undefined && third === 'conflict') {
+    return { name: 'conflict', id: decodeURIComponent(second) };
+  }
   return { name: 'not-found' };
 }
 
@@ -31,6 +35,8 @@ export function pathFor(route: Route): string {
       return '/plants/new';
     case 'edit-plant':
       return `/plants/${encodeURIComponent(route.id)}/edit`;
+    case 'conflict':
+      return `/plants/${encodeURIComponent(route.id)}/conflict`;
     case 'not-found':
       return '/plants';
   }

@@ -4,6 +4,7 @@ import { navigate, useRoute } from './navigation.ts';
 import { SproutDataProvider } from './offline/SproutDataProvider.tsx';
 import { SyncBanner } from './offline/SyncBanner.tsx';
 import type { Route } from './router.ts';
+import { ConflictScreen } from './screens/ConflictScreen.tsx';
 import { PlantForm } from './screens/PlantForm.tsx';
 import { PlantList } from './screens/PlantList.tsx';
 import { SignIn } from './screens/SignIn.tsx';
@@ -19,6 +20,7 @@ function Screen({
   onSignOut: () => void;
 }) {
   if (route.name === 'new-plant') return <PlantForm key="new" />;
+  if (route.name === 'conflict') return <ConflictScreen key={route.id} plantId={route.id} />;
   if (route.name === 'edit-plant') {
     // A new key gives each plant a fresh form instead of reusing the last one's state.
     return <PlantForm key={route.id} plantId={route.id} />;
