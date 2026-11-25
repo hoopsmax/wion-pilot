@@ -4,10 +4,18 @@ import type { SyncStatus } from '../pages/sync-banner.ts';
 
 Given('{word} is signed in', async ({ people }, name: string) => {
   const person = await people.as(name);
-  await person.signIn();
-  await person.plantList.waitUntilShown();
-  await person.banner.expectStatus('Synced');
+  await person.signInAndWaitForSync();
 });
+
+Given(
+  '{word} and {word} are signed in on separate devices',
+  async ({ people }, first: string, second: string) => {
+    for (const name of [first, second]) {
+      const person = await people.as(name);
+      await person.signInAndWaitForSync();
+    }
+  },
+);
 
 When('{word} signs in', async ({ people }, name: string) => {
   const person = await people.as(name);

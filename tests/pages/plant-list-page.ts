@@ -5,6 +5,8 @@ export class PlantListPage {
   readonly addPlant: Locator;
   readonly signOutButton: Locator;
   readonly signOutHint: Locator;
+  /** Any plant still marked as not synced. */
+  readonly anyNotSynced: Locator;
   readonly #page: Page;
 
   constructor(page: Page) {
@@ -13,6 +15,7 @@ export class PlantListPage {
     this.addPlant = page.getByRole('link', { name: 'Add plant' });
     this.signOutButton = page.getByRole('button', { name: 'Sign out' });
     this.signOutHint = page.getByText('You can sign out once all your changes are synced.');
+    this.anyNotSynced = page.getByText('Not synced yet');
   }
 
   /** One plant's row, found by its exact name (each row has data-testid="plant-row"). */
@@ -31,8 +34,9 @@ export class PlantListPage {
     await expect(this.row(name).getByText(details, { exact: true })).toBeVisible();
   }
 
-  notSynced(name: string): Locator {
-    return this.row(name).getByText('Not synced yet');
+  /** A text shown inside one plant's row, for example its "Not synced yet" mark. */
+  textInRow(name: string, text: string): Locator {
+    return this.row(name).getByText(text);
   }
 
   async waitUntilShown(): Promise<void> {
