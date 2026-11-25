@@ -16,13 +16,16 @@
     "format": "prettier --write .",
     "typecheck": "tsc --noEmit",
     "test:unit": "vitest run",
-    "check": "npm run lint && npm run typecheck && npm run test:unit"
+    "check": "npm run lint && npm run typecheck && npm run test:unit",
+    "test": "bddgen && playwright test --pass-with-no-tests"
   },
   "devDependencies": {
     "@eslint/js": "10.0.1",
+    "@playwright/test": "1.65.1",
     "@types/node": "26.6.7",
     "eslint": "10.15.0",
     "eslint-config-prettier": "10.1.8",
+    "playwright-bdd": "9.2.1",
     "prettier": "3.10.1",
     "typescript": "6.0.3",
     "typescript-eslint": "8.74.0",
