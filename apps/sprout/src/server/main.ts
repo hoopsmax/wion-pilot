@@ -32,6 +32,14 @@ const app = createApp({
   webFolder,
 });
 app.listen(port, (error) => {
+  // Starting Sprout a second time is the usual cause; say so instead of a stack trace.
+  if (error && 'code' in error && error.code === 'EADDRINUSE') {
+    console.error(
+      `Port ${String(port)} is busy. Is Sprout already running? ` +
+        `Stop it, or start this one with SPROUT_PORT=${String(port + 1)}.`,
+    );
+    process.exit(1);
+  }
   if (error) throw error;
   console.log(`Sprout runs at http://localhost:${String(port)}${testMode ? ' (test mode)' : ''}`);
 });
