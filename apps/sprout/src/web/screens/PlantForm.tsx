@@ -5,66 +5,39 @@ import {
   LIGHT_LEVELS,
   validatePlantFields,
   type FieldErrors,
-  type Plant,
-  type PlantFields,
 } from '../../shared/plant.ts';
-import { api, ApiError, type Session } from '../api.ts';
 import { errorAttributes, Field } from '../Field.tsx';
 import { LIGHT_LABELS } from '../labels.ts';
 import { Link } from '../Link.tsx';
 import { navigate } from '../navigation.ts';
+import { useSproutData } from '../offline/SproutDataProvider.tsx';
 
 interface PlantFormProps {
-  session: Session;
   /** Missing for a new plant. */
   plantId?: string;
-  onUnauthorized: () => void;
 }
 
-function save(session: Session, plant: Plant | undefined, fields: PlantFields): Promise<Plant> {
-  return plant
-    ? api.updatePlant(session.token, plant.id, plant.version, fields)
-    : api.createPlant(session.token, crypto.randomUUID(), fields);
-}
-
-export function PlantForm({ session, plantId, onUnauthorized }: PlantFormProps) {
-  const [plant, setPlant] = useState<Plant>();
+export function PlantForm({ plantId }: PlantFormProps) {
+  const data = useSproutData();
+  const plant = data.plants.find((candidate) => candidate.id === plantId);
   const [name, setName] = useState('');
   const [light, setLight] = useState('');
   const [interval, setInterval] = useState('');
+  const [filledIn, setFilledIn] = useState(false);
   const [errors, setErrors] = useState<FieldErrors>({});
   const [formError, setFormError] = useState<string>();
   const [busy, setBusy] = useState(false);
 
+  // Fill the form once when the plant to edit is known; later syncs must not undo typing.
   useEffect(() => {
-    if (plantId === undefined) return;
-    api.listPlants(session.token).then(
-      (plants) => {
-        const found = plants.find((candidate) => candidate.id === plantId);
-        if (!found) {
-          setFormError('This plant does not exist (any more).');
-          return;
-        }
-        setPlant(found);
-        setName(found.name);
-        setLight(found.light);
-        setInterval(String(found.wateringIntervalDays));
-      },
-      (problem: unknown) => {
-        if (problem instanceof ApiError && problem.status === 401) onUnauthorized();
-        else setFormError(`Could not load the plant: ${String(problem)}`);
-      },
-    );
-  }, [plantId, session.token, onUnauthorized]);
+    if (!plant || filledIn) return;
+    setName(plant.name);
+    setLight(plant.light);
+    setInterval(String(plant.wateringIntervalDays));
+    setFilledIn(true);
+  }, [plant, filledIn]);
 
-  const explain = (problem: unknown) => {
-    if (problem instanceof ApiError && problem.status === 401) onUnauthorized();
-    else if (problem instanceof ApiError && problem.status === 400) setErrors(problem.fields);
-    else if (problem instanceof ApiError && problem.status === 409) {
-      setFormError('Someone else changed this plant. Reload to see the latest.');
-    } else if (problem instanceof ApiError) setFormError(problem.message);
-    else setFormError('Could not reach Sprout. Check your connection and try again.');
-  };
+  const missing = plantId !== undefined && data.ready && !plant;
 
   const submit = async (event: SubmitEvent) => {
     event.preventDefault();
@@ -78,10 +51,14 @@ export function PlantForm({ session, plantId, onUnauthorized }: PlantFormProps) 
     if (!validation.ok) return;
     setBusy(true);
     try {
-      await save(session, plant, validation.fields);
+      // Saving only writes to this device; sending to the server happens in the background.
+      await data.save(plantId, validation.fields);
       navigate('/plants');
     } catch (problem) {
-      explain(problem);
+      console.error(problem);
+      setFormError(
+        `Could not save: ${problem instanceof Error ? problem.message : String(problem)}`,
+      );
       setBusy(false);
     }
   };
@@ -93,9 +70,11 @@ export function PlantForm({ session, plantId, onUnauthorized }: PlantFormProps) 
     <main className="page">
       <h1>{title}</h1>
       <form className="card" onSubmit={(event) => void submit(event)} noValidate>
-        {(hasErrors || formError) && (
+        {(hasErrors || formError || missing) && (
           <p className="form-error" role="alert" data-testid="form-errors">
-            {formError ?? 'Please fix the marked fields.'}
+            {missing
+              ? 'This plant does not exist (any more).'
+              : (formError ?? 'Please fix the marked fields.')}
           </p>
         )}
         <Field id="name" label="Name" error={errors.name}>
@@ -140,7 +119,7 @@ export function PlantForm({ session, plantId, onUnauthorized }: PlantFormProps) 
           />
         </Field>
         <div className="actions">
-          <button type="submit" disabled={busy || (plantId !== undefined && plant === undefined)}>
+          <button type="submit" disabled={busy || (plantId !== undefined && !filledIn)}>
             {busy ? 'Saving…' : 'Save'}
           </button>
           <Link className="button secondary" href="/plants">

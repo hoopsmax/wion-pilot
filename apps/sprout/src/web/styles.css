@@ -140,3 +140,41 @@ button:disabled {
 .muted {
   color: var(--muted);
 }
+
+.sync-banner {
+  padding: 0.6rem 1rem;
+  text-align: center;
+  font-size: 0.95rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.sync-synced {
+  background: var(--green-light);
+  color: var(--green);
+}
+
+.sync-syncing {
+  background: #eef3fb;
+  color: #24508f;
+}
+
+.sync-offline {
+  background: #fff4e0;
+  color: #7a4b00;
+}
+
+.sync-attention {
+  margin: 0.35rem 0 0;
+  font-weight: 600;
+  color: var(--error);
+}
+
+.not-synced {
+  display: inline-block;
+  margin: 0.4rem 0 0;
+  padding: 0.1rem 0.5rem;
+  border-radius: 1rem;
+  background: #fff4e0;
+  color: #7a4b00;
+  font-size: 0.82rem;
+}
