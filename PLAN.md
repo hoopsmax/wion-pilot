@@ -107,15 +107,20 @@ Times are rough, for working with Claude Code.
 
 ### M1: Sprout demo app (1 day)
 
-- The screens and API above, with JSON-file storage, seed data and reset
-- The offline outbox and sync
-- The conflict screen
-- `npm run demo` starts the web app and the API
+Built in five small steps, each one approved first. The scope was narrowed to the two flows that are usually tested by hand: offline work and two people editing the same thing.
+
+- **Built:**
+  - API with JSON-file storage, seed data, `npm run demo:reset` and a test-mode reset endpoint
+  - Screens: sign in (two demo users), plant list, add/edit form with validation
+  - Offline outbox and sync, with an Offline / Syncing / Synced banner; sign out waits until everything is synced
+  - Conflicts decided field by field: fields only one person changed are merged automatically, equal values are not a conflict, and only fields both changed to different values are shown side by side
+  - `npm run demo` builds and starts the web app and the API on one address
+- **Moved to later:** watering log, settings screen, search and filter, and the service worker (reloading the page while offline). Until the watering log exists, M2's `watering-log` feature waits.
 
 **Done when:**
-- you can add and edit plants and log waterings
+- you can add and edit plants
 - you can go offline in the browser, keep working, come back online, and see everything sync
-- editing the same plant in two browsers shows the conflict screen
+- editing the same field of a plant in two browsers shows the conflict screen with only that field
 
 ### M2: Hand-written BDD suite (1 day)
 
