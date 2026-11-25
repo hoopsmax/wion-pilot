@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest';
 import type { BddStep } from './feature-lines.ts';
-import { stepStatuses } from './step-status.ts';
+import { recordedGherkinSteps, stepStatuses, type StepTree } from './step-status.ts';
 
 const gherkin = (texts: string[]): BddStep[] =>
   texts.map((textWithKeyword, i) => ({
@@ -8,6 +8,36 @@ const gherkin = (texts: string[]): BddStep[] =>
     gherkinStepLine: 5 + i,
     textWithKeyword,
   }));
+
+describe('recordedGherkinSteps', () => {
+  const tree = (
+    title: string,
+    category: string,
+    steps: StepTree[] = [],
+    error?: unknown,
+  ): StepTree => ({
+    title,
+    category,
+    steps,
+    ...(error === undefined ? {} : { error }),
+  });
+
+  test('finds Background steps inside the before hook, in order, and not the actions inside steps', () => {
+    const recorded: StepTree[] = [
+      tree('Before Hooks', 'hook', [
+        tree('Fixture "people"', 'fixture'),
+        tree('Given a test plant exists', 'test.step'),
+      ]),
+      tree('When Ava saves', 'test.step', [tree('Click', 'pw:api')]),
+      tree('Then it is saved', 'test.step', [], new Error('no')),
+    ];
+    expect(recordedGherkinSteps(recorded)).toEqual([
+      { title: 'Given a test plant exists', failed: false },
+      { title: 'When Ava saves', failed: false },
+      { title: 'Then it is saved', failed: true },
+    ]);
+  });
+});
 
 describe('stepStatuses', () => {
   test('marks passed, failed and not run steps with their .feature lines', () => {

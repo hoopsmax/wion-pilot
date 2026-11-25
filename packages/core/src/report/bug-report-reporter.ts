@@ -1,9 +1,10 @@
 import { mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { dirname, join, relative } from 'node:path';
 import type { FullConfig, Reporter, TestCase, TestResult } from '@playwright/test/reporter';
-import { buildDraft, draftFileName, type DraftInput, type Evidence } from './draft.ts';
+import { buildDraft, draftFileName, type DraftInput } from './draft.ts';
+import { evidenceFrom } from './evidence.ts';
 import { readFeatureLines, testAtLine, type BddTest } from './feature-lines.ts';
-import { stepStatuses } from './step-status.ts';
+import { recordedGherkinSteps, stepStatuses } from './step-status.ts';
 
 /** The name of the attachment the test fixtures add with browser errors and failed requests. */
 export const BROWSER_LOG_ATTACHMENT = 'wion-browser-log';
@@ -12,12 +13,6 @@ export interface BrowserLog {
   consoleErrors: string[];
   failedRequests: string[];
 }
-
-const EVIDENCE_LABELS: Record<string, string> = {
-  screenshot: 'Screenshot',
-  video: 'Video',
-  trace: 'Trace',
-};
 
 interface BddSource {
   featureFile: string;
@@ -86,9 +81,7 @@ export default class BugReportReporter implements Reporter {
     const source = this.#bddSource(test);
     if (source.problem) notes.push(`${source.problem} Steps are shown without .feature lines.`);
 
-    const recorded = result.steps
-      .filter((step) => step.category === 'test.step')
-      .map((step) => ({ title: step.title, failed: step.error !== undefined }));
+    const recorded = recordedGherkinSteps(result.steps);
     const steps = source.scenario
       ? stepStatuses(source.scenario.steps, recorded)
       : recorded.map(
@@ -100,12 +93,7 @@ export default class BugReportReporter implements Reporter {
       );
     }
 
-    const evidence: Evidence[] = result.attachments.flatMap((attachment) => {
-      const label = EVIDENCE_LABELS[attachment.name];
-      return label && attachment.path
-        ? [{ label, path: relative(this.#outDir, attachment.path) }]
-        : [];
-    });
+    const evidence = evidenceFrom(result.attachments, this.#outDir);
     const log = browserLogOf(result);
     const commit = process.env['GITHUB_SHA'];
 

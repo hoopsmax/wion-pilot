@@ -24,6 +24,28 @@ describe('expectedAndActual', () => {
     expect(expectedAndActual(message)).toEqual({ expected: '"a"', actual: '"b"' });
   });
 
+  test('reads the diff printed by toEqual', () => {
+    const message = [
+      'Error: expect(received).toEqual(expected) // deep equality',
+      '',
+      '- Expected  - 1',
+      '+ Received  + 1',
+      '',
+      '  Array [',
+      '-   "direct",',
+      '+   "low",',
+      '    9,',
+      '  ]',
+      '',
+      'Call Log:',
+      '- Timeout 5000ms exceeded while waiting on the predicate',
+    ].join('\n');
+    expect(expectedAndActual(message)).toEqual({
+      expected: 'Array [\n  "direct",\n  9,\n]',
+      actual: 'Array [\n  "low",\n  9,\n]',
+    });
+  });
+
   test('returns nothing when the error has no expected and received values', () => {
     expect(expectedAndActual('Error: Test timeout of 30000ms exceeded.')).toBeUndefined();
     expect(expectedAndActual('Expected: 1 but nothing was received')).toBeUndefined();

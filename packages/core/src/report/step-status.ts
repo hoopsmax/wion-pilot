@@ -7,6 +7,26 @@ export interface RecordedStep {
   failed: boolean;
 }
 
+/** The part of a Playwright test step this module needs (keeps it testable without Playwright). */
+export interface StepTree {
+  title: string;
+  category: string;
+  error?: unknown;
+  steps: StepTree[];
+}
+
+/**
+ * The Gherkin steps Playwright recorded, in order. Background steps run inside a "before" hook,
+ * so the search goes into hooks too; inside a Gherkin step it stops (those are its own actions).
+ */
+export function recordedGherkinSteps(steps: StepTree[]): RecordedStep[] {
+  return steps.flatMap((step) =>
+    step.category === 'test.step'
+      ? [{ title: step.title, failed: step.error !== undefined }]
+      : recordedGherkinSteps(step.steps),
+  );
+}
+
 /**
  * Marks every Gherkin step of a scenario: "failed" if it ran and failed, "passed" if it ran,
  * "not run" if the test never reached it. Steps are matched by their text in order, so the same
