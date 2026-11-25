@@ -13,7 +13,7 @@ import type { Session } from '../api.ts';
 import { openKeyValue } from './idb.ts';
 import { createLocalStore, type LocalState, type LocalStore } from './local-store.ts';
 import type { Conflict } from './conflicts.ts';
-import { changeFor, shownPlants, type ShownPlant } from './outbox.ts';
+import { changeFor, shownPlants, type ShownPlant, type StartedFrom } from './outbox.ts';
 import { syncOnce } from './sync.ts';
 import { apiTransport } from './transport.ts';
 
@@ -30,7 +30,12 @@ export interface SproutData {
   conflicts: Conflict[];
   /** An unexpected sync failure, shown to the user instead of being hidden. */
   problem: string | undefined;
-  save: (plantId: string | undefined, fields: PlantFields) => Promise<void>;
+  /** `startedFrom` is the plant as it was when the user opened the form. */
+  save: (
+    plantId: string | undefined,
+    fields: PlantFields,
+    startedFrom?: StartedFrom,
+  ) => Promise<void>;
   /** Closes a conflict with the values the user chose. */
   decide: (plantId: string, fields: PlantFields) => Promise<void>;
 }
@@ -140,11 +145,12 @@ export function SproutDataProvider({ session, onUnauthorized, children }: Provid
   }, [runSync]);
 
   const save = useCallback(
-    async (plantId: string | undefined, fields: PlantFields) => {
+    async (plantId: string | undefined, fields: PlantFields, startedFrom?: StartedFrom) => {
       if (!store) throw new Error('Sprout data is not loaded yet.');
       const current = await store.load();
+      const newId = () => crypto.randomUUID();
       await store.enqueue(
-        changeFor(current.plants, current.outbox, plantId, fields, () => crypto.randomUUID()),
+        changeFor(current.plants, current.outbox, plantId, fields, newId, startedFrom),
       );
       setState(await store.load());
       void runSync();

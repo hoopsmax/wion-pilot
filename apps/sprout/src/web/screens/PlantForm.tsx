@@ -10,6 +10,7 @@ import { errorAttributes, Field } from '../Field.tsx';
 import { LIGHT_LABELS } from '../labels.ts';
 import { Link } from '../Link.tsx';
 import { navigate } from '../navigation.ts';
+import type { StartedFrom } from '../offline/outbox.ts';
 import { useSproutData } from '../offline/SproutDataProvider.tsx';
 
 interface PlantFormProps {
@@ -24,6 +25,7 @@ export function PlantForm({ plantId }: PlantFormProps) {
   const [light, setLight] = useState('');
   const [interval, setInterval] = useState('');
   const [filledIn, setFilledIn] = useState(false);
+  const [startedFrom, setStartedFrom] = useState<StartedFrom>();
   const [errors, setErrors] = useState<FieldErrors>({});
   const [formError, setFormError] = useState<string>();
   const [busy, setBusy] = useState(false);
@@ -34,6 +36,7 @@ export function PlantForm({ plantId }: PlantFormProps) {
     setName(plant.name);
     setLight(plant.light);
     setInterval(String(plant.wateringIntervalDays));
+    setStartedFrom(plant.server);
     setFilledIn(true);
   }, [plant, filledIn]);
 
@@ -52,7 +55,7 @@ export function PlantForm({ plantId }: PlantFormProps) {
     setBusy(true);
     try {
       // Saving only writes to this device; sending to the server happens in the background.
-      await data.save(plantId, validation.fields);
+      await data.save(plantId, validation.fields, startedFrom);
       navigate('/plants');
     } catch (problem) {
       console.error(problem);

@@ -13,14 +13,23 @@ export type Change =
     };
 
 /** A plant as the user sees it: the server copy with their waiting changes applied. */
+/** The server's version of a plant as this browser saw it: where an edit starts from. */
+export interface StartedFrom {
+  version: number;
+  fields: PlantFields;
+}
+
 export interface ShownPlant extends PlantFields {
   id: string;
   synced: boolean;
+  /** Undefined for a plant that so far only exists on this device. */
+  server: StartedFrom | undefined;
 }
 
 /**
- * The change to queue when the user saves a plant. A plant the server knows is edited from the
- * version this browser last saw; one that only exists in the outbox is still a create.
+ * The change to queue when the user saves a plant. An edit is based on `startedFrom`, the version
+ * shown when the form was opened: a background refresh while the user types must not hide that
+ * someone else saved in between. A plant that only exists in the outbox is still a create.
  */
 export function changeFor(
   serverPlants: readonly Plant[],
@@ -28,17 +37,13 @@ export function changeFor(
   plantId: string | undefined,
   fields: PlantFields,
   newId: () => string,
+  startedFrom?: StartedFrom,
 ): Change {
   if (plantId === undefined) return { kind: 'create', plantId: newId(), fields };
   const known = serverPlants.find((plant) => plant.id === plantId);
   if (known) {
-    return {
-      kind: 'update',
-      plantId,
-      baseVersion: known.version,
-      baseFields: fieldsOf(known),
-      fields,
-    };
+    const base = startedFrom ?? { version: known.version, fields: fieldsOf(known) };
+    return { kind: 'update', plantId, baseVersion: base.version, baseFields: base.fields, fields };
   }
   if (outbox.some((change) => change.plantId === plantId && change.kind === 'create')) {
     return { kind: 'create', plantId, fields };
@@ -94,10 +99,19 @@ export function shownPlants(
   outbox: readonly Change[],
 ): ShownPlant[] {
   const shown = new Map<string, ShownPlant>(
-    serverPlants.map((plant) => [plant.id, { id: plant.id, ...fieldsOf(plant), synced: true }]),
+    serverPlants.map((plant) => [
+      plant.id,
+      {
+        id: plant.id,
+        ...fieldsOf(plant),
+        synced: true,
+        server: { version: plant.version, fields: fieldsOf(plant) },
+      },
+    ]),
   );
   for (const change of outbox) {
-    shown.set(change.plantId, { id: change.plantId, ...change.fields, synced: false });
+    const server = shown.get(change.plantId)?.server;
+    shown.set(change.plantId, { id: change.plantId, ...change.fields, synced: false, server });
   }
   return [...shown.values()].sort((a, b) => a.name.localeCompare(b.name));
 }

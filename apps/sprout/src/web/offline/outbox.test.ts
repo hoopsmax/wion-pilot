@@ -38,6 +38,17 @@ describe('changeFor', () => {
     });
   });
 
+  test('an edit starts from the version shown when the form opened, not a newer refresh', () => {
+    const refreshed = { ...fern, ...fields('Ben renamed it'), version: 4 };
+    const startedFrom = { version: 3, fields: fields('Window fern') };
+    expect(
+      changeFor([refreshed], [], 'fern', fields('Big fern'), newId, startedFrom),
+    ).toMatchObject({
+      baseVersion: 3,
+      baseFields: fields('Window fern'),
+    });
+  });
+
   test('editing a plant that was only created offline stays a create', () => {
     const outbox: Change[] = [{ kind: 'create', plantId: 'basil', fields: fields('Basil') }];
     expect(changeFor([], outbox, 'basil', fields('Thai basil'), newId).kind).toBe('create');
@@ -109,6 +120,8 @@ describe('afterSent', () => {
 });
 
 describe('shownPlants', () => {
+  const fernOnServer = { version: 3, fields: fields('Window fern') };
+
   test('shows waiting changes on top of the server copy, marked as not synced', () => {
     const outbox: Change[] = [
       {
@@ -121,14 +134,14 @@ describe('shownPlants', () => {
       { kind: 'create', plantId: 'basil', fields: fields('Basil') },
     ];
     expect(shownPlants([fern], outbox)).toEqual([
-      { id: 'basil', ...fields('Basil'), synced: false },
-      { id: 'fern', ...fields('Big fern'), synced: false },
+      { id: 'basil', ...fields('Basil'), synced: false, server: undefined },
+      { id: 'fern', ...fields('Big fern'), synced: false, server: fernOnServer },
     ]);
   });
 
   test('a plant without waiting changes is synced', () => {
     expect(shownPlants([fern], [])).toEqual([
-      { id: 'fern', ...fields('Window fern'), synced: true },
+      { id: 'fern', ...fields('Window fern'), synced: true, server: fernOnServer },
     ]);
   });
 });
