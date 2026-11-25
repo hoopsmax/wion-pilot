@@ -23,3 +23,6 @@ apps/sprout/data/db.json
 
 # Sprout's built web app: made by npm run build.
 apps/sprout/dist/
+
+# Bug-report drafts: written by the test run for failing tests.
+reports/

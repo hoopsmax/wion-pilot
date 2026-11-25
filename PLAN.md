@@ -147,6 +147,7 @@ Built in five small steps, each one approved first. The scope was narrowed to th
   - console errors and failed network requests
   - a link to the failing step in the `.feature` file
 - Every draft is marked "DRAFT: verify before filing".
+- **Built** in `packages/core/src/report/`: drafts are written to `reports/bugs/<feature>--<scenario>.md`; Background steps and two-browser tests (one screenshot per person) are covered; when Playwright's error states no expected and actual, the draft says so instead of guessing. `npm run demo:bug` runs a scenario that fails on purpose, and the "Bug-report demo" CI job checks its draft on every push. Example: `docs/example-bug-report.md`.
 
 **Done when:** a deliberately broken test produces a complete draft.
 

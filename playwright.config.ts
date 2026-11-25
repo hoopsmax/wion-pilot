@@ -17,13 +17,22 @@ const dataFile = join(import.meta.dirname, '.wion', 'e2e', 'sprout-db.json');
 // (such as a cloud sandbox). Unset on a laptop and in CI, where `npx playwright install` is used.
 const chromiumPath = process.env['PW_CHROMIUM_PATH'];
 
+// The @demo-bug scenario fails on purpose; it runs only through `npm run demo:bug`.
+const demoBug = process.env['WION_DEMO_BUG'] === '1';
+
 export default defineConfig({
   testDir,
+  ...(demoBug ? {} : { grepInvert: /@demo-bug/ }),
   fullyParallel: true,
   forbidOnly: Boolean(process.env['CI']),
   // No retries: a flaky test must fail visibly, not pass on a second try.
   retries: 0,
-  reporter: [['list'], ['html', { open: 'never' }]],
+  reporter: [
+    ['list'],
+    ['html', { open: 'never' }],
+    // Writes reports/bugs/<feature>--<scenario>.md for every failing test.
+    ['./packages/core/src/report/bug-report-reporter.ts'],
+  ],
   use: {
     baseURL,
     // Evidence for failures, kept only when a test fails (used by M3's bug-report drafts).

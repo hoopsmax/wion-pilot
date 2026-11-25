@@ -6,15 +6,16 @@ You point Wion-Pilot at a web app, and it maps the screens. Then you build tests
 
 ## Status
 
-Milestones 0 to 2 of the [roadmap](PLAN.md) are done:
+Milestones 0 to 3 of the [roadmap](PLAN.md) are done:
 
 - **M0:** the tooling (strict TypeScript, ESLint and Prettier, Vitest, Playwright with playwright-bdd, CI on GitHub Actions)
 - **M1:** **Sprout**, the demo app that Wion-Pilot tests
 - **M2:** a hand-written BDD suite that automates Sprout's hardest flows, run in CI on every push
+- **M3:** a bug-report draft for every failing test ([example](docs/example-bug-report.md))
 
 The latest test report from `main` is published at **https://hoopsmax.github.io/wion-pilot/**.
 
-Next is M3: bug-report drafts from failing tests.
+Next is M4: mapping an app's screens with `wion map`.
 
 ## Sprout, the demo app
 
@@ -53,6 +54,7 @@ Then close the terminal window, open a new one, and run the setup above.
 | --- | --- |
 | `npm run demo` | Build Sprout and start it at http://localhost:4600. |
 | `npm run demo:reset` | Restore Sprout's seed data. Works while the demo is running. |
+| `npm run demo:bug` | Run one scenario that fails on purpose and write its bug-report draft. npm reports a failure: that is the demo. |
 | `npm run check` | Lint (ESLint and Prettier), typecheck and unit tests. Run it before every commit. |
 | `npm run format` | Format all files with Prettier. |
 | `npm test` | Generate the tests from the `.feature` files (`bddgen`), then run Playwright. |
@@ -110,6 +112,23 @@ How the tests are written (the rules are in [CLAUDE.md](CLAUDE.md)):
 - **Failure evidence:** a failing test keeps a screenshot, a video and a trace. In CI the HTML report is attached to every run as the `playwright-report` artifact.
 
 `PW_CHROMIUM_PATH` is only for sandboxes whose pre-installed browser belongs to another Playwright version; leave it unset on your machine.
+
+## Bug-report drafts
+
+When a test fails, Wion-Pilot writes a draft bug report to `reports/bugs/<feature>--<scenario>.md`. A person checks it before filing it; every draft starts with **"DRAFT: verify before filing."** See [a real example](docs/example-bug-report.md).
+
+A draft contains:
+
+- the steps to reproduce, taken from the Gherkin steps, each marked passed ✅, failing ❌ or not run
+- a link to the `.feature` file and to the failing line
+- expected and actual, read from Playwright's error; if the error states neither, the draft says so instead of guessing
+- links to the screenshot, video and trace, and the command to open the trace
+- the browser console errors and failed network requests of everyone in the test (Ava and Ben)
+- the full error, and a "Notes" section for anything the reporter could not find out
+
+Passing tests write nothing, and each run starts with an empty `reports/bugs/`. In CI the drafts of a failing run are attached as the `bug-report-drafts` artifact, and the "Bug-report demo" job checks on every push that `npm run demo:bug` still produces a complete draft.
+
+The reporter lives in `packages/core/src/report/`, the first part of Wion-Pilot itself.
 
 ## How it's built
 
