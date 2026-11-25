@@ -52,6 +52,8 @@ export function SproutDataProvider({ session, onUnauthorized, children }: Provid
   const [online, setOnline] = useState(() => navigator.onLine);
   const [running, setRunning] = useState(false);
   const [problem, setProblem] = useState<string>();
+  // "Synced" is a promise to the user, so it waits for a round that really reached the server.
+  const [hasSynced, setHasSynced] = useState(false);
   const syncing = useRef(false);
   const syncAgain = useRef(false);
   // Read through a function: a save can set the flag while a round awaits the network,
@@ -103,6 +105,7 @@ export function SproutDataProvider({ session, onUnauthorized, children }: Provid
         }
         setProblem(undefined);
         setOnline(outcome === 'synced');
+        if (outcome === 'synced') setHasSynced(true);
         if (outcome === 'offline') return;
       } while (anotherRoundWanted());
     } catch (error) {
@@ -148,9 +151,15 @@ export function SproutDataProvider({ session, onUnauthorized, children }: Provid
 
   const value = useMemo((): SproutData => {
     const waiting = state?.outbox.length ?? 0;
-    const status: SyncStatus = !online ? 'offline' : running || waiting > 0 ? 'syncing' : 'synced';
+    const status: SyncStatus = !online
+      ? 'offline'
+      : running || waiting > 0 || !hasSynced
+        ? 'syncing'
+        : 'synced';
+    // On a first visit the browser copy is empty until the first sync; that is not "no plants".
+    const firstVisitLoading = state?.plants.length === 0 && !hasSynced && online;
     return {
-      ready: state !== undefined,
+      ready: state !== undefined && !firstVisitLoading,
       plants: state ? shownPlants(state.plants, state.outbox) : [],
       status,
       waiting,
@@ -158,7 +167,7 @@ export function SproutDataProvider({ session, onUnauthorized, children }: Provid
       problem,
       save,
     };
-  }, [state, online, running, problem, save]);
+  }, [state, online, running, problem, hasSynced, save]);
 
   return <SproutDataContext.Provider value={value}>{children}</SproutDataContext.Provider>;
 }
