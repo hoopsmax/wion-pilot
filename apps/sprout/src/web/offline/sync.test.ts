@@ -19,6 +19,7 @@ const fields = (name: string): PlantFields => ({
   name,
   light: 'medium',
   wateringIntervalDays: 4,
+  lastWateredOn: '2026-06-10',
 });
 const plant = (id: string, name: string, version: number): Plant => ({
   id,

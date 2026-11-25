@@ -77,6 +77,7 @@ export function fieldsAfterChoices(
     name: pick('name'),
     light: pick('light'),
     wateringIntervalDays: pick('wateringIntervalDays'),
+    lastWateredOn: pick('lastWateredOn'),
   };
 }
 

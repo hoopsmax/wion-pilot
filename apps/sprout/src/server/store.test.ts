@@ -3,9 +3,14 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 import type { PlantFields } from '../shared/plant.ts';
-import { createStore, type Store } from './store.ts';
+import { createStore, readSeed, SEED_DAY, type Store } from './store.ts';
 
-const fern: PlantFields = { name: 'Window fern', light: 'medium', wateringIntervalDays: 7 };
+const fern: PlantFields = {
+  name: 'Window fern',
+  light: 'medium',
+  wateringIntervalDays: 7,
+  lastWateredOn: '2026-06-10',
+};
 const plantId = '11111111-1111-4111-8111-111111111111';
 const ava = { id: 'ava', name: 'Ava' };
 const ben = { id: 'ben', name: 'Ben' };
@@ -96,5 +101,29 @@ describe('a broken data file', () => {
   test('fails with a message that says how to fix it', async () => {
     await writeFile(file, '{ not json');
     await expect(store.listPlants()).rejects.toThrow(/npm run demo:reset/);
+  });
+});
+
+describe('watering dates', () => {
+  test('a plant saved before reminders existed counts as watered on its last save', async () => {
+    const oldPlant = {
+      id: plantId,
+      name: fern.name,
+      light: fern.light,
+      wateringIntervalDays: fern.wateringIntervalDays,
+      version: 3,
+      updatedAt: '2026-05-20T18:30:00.000Z',
+    };
+    await writeFile(file, JSON.stringify({ users: [], plants: [oldPlant] }));
+    const [plant] = await store.listPlants();
+    expect(plant?.lastWateredOn).toBe('2026-05-20');
+  });
+
+  test('seed waterings move from the seed day to today, keeping their distance', async () => {
+    const seed = { users: [], plants: [{ id: plantId, ...fern, lastWateredOn: '2025-12-30' }] };
+    await writeFile(file, JSON.stringify(seed));
+    expect(SEED_DAY).toBe('2026-01-01');
+    const { plants } = await readSeed(file, '2026-06-15');
+    expect(plants[0]?.lastWateredOn).toBe('2026-06-13');
   });
 });

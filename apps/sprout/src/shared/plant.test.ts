@@ -1,7 +1,12 @@
 import { describe, expect, test } from 'vitest';
 import { validatePlantFields } from './plant.ts';
 
-const valid = { name: 'Window fern', light: 'medium', wateringIntervalDays: 7 };
+const valid = {
+  name: 'Window fern',
+  light: 'medium',
+  wateringIntervalDays: 7,
+  lastWateredOn: '2026-06-10',
+};
 
 describe('validatePlantFields', () => {
   test('accepts valid fields and trims the name', () => {
@@ -40,9 +45,15 @@ describe('validatePlantFields', () => {
     expect(result.ok ? undefined : result.errors.light).toBe('Choose a light level from the list.');
   });
 
+  test.each(['2026-02-30', 'yesterday', undefined])('rejects a last watering of %s', (day) => {
+    const result = validatePlantFields({ ...valid, lastWateredOn: day });
+    expect(result.ok ? undefined : result.errors.lastWateredOn).toBeDefined();
+  });
+
   test('reports every invalid field at once', () => {
     const result = validatePlantFields({});
     expect(result.ok ? [] : Object.keys(result.errors).sort()).toEqual([
+      'lastWateredOn',
       'light',
       'name',
       'wateringIntervalDays',

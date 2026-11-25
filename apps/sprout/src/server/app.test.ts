@@ -22,6 +22,7 @@ const seed: SproutData = {
       name: 'Window fern',
       light: 'medium',
       wateringIntervalDays: 4,
+      lastWateredOn: '2026-06-10',
       version: 1,
       updatedAt: '2026-01-01T00:00:00.000Z',
       updatedBy: 'ava',
@@ -77,6 +78,7 @@ const edit = (baseVersion: number, name: string) => ({
   name,
   light: 'medium',
   wateringIntervalDays: 4,
+  lastWateredOn: '2026-06-10',
 });
 
 beforeEach(() => startApp());
@@ -111,7 +113,13 @@ describe('plants', () => {
     const response = await call(
       'POST',
       '/api/plants',
-      { id: crypto.randomUUID(), name: '', light: 'medium', wateringIntervalDays: 0 },
+      {
+        id: crypto.randomUUID(),
+        name: '',
+        light: 'medium',
+        wateringIntervalDays: 0,
+        lastWateredOn: '2026-06-10',
+      },
       token,
     );
     expect(response.status).toBe(400);

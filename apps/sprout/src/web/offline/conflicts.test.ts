@@ -3,7 +3,12 @@ import type { Plant, PlantFields } from '../../shared/plant.ts';
 import { decideConflict, fieldsAfterChoices, settleConflict, type Conflict } from './conflicts.ts';
 import type { Change } from './outbox.ts';
 
-const base: PlantFields = { name: 'Window fern', light: 'medium', wateringIntervalDays: 4 };
+const base: PlantFields = {
+  name: 'Window fern',
+  light: 'medium',
+  wateringIntervalDays: 4,
+  lastWateredOn: '2026-06-10',
+};
 const edit = (fields: Partial<PlantFields>): Change => ({
   kind: 'update',
   plantId: 'fern',
@@ -81,10 +86,20 @@ describe('settleConflict', () => {
 describe('deciding', () => {
   const conflict: Conflict = {
     plantId: 'fern',
-    mine: { name: 'Fern (Ava)', light: 'low', wateringIntervalDays: 4 },
+    mine: {
+      name: 'Fern (Ava)',
+      light: 'low',
+      wateringIntervalDays: 4,
+      lastWateredOn: '2026-06-10',
+    },
     latest: latest({ name: 'Fern (Ben)', light: 'direct' }),
     clashes: ['name', 'light'],
-    merged: { name: 'Fern (Ben)', light: 'direct', wateringIntervalDays: 4 },
+    merged: {
+      name: 'Fern (Ben)',
+      light: 'direct',
+      wateringIntervalDays: 4,
+      lastWateredOn: '2026-06-10',
+    },
   };
 
   test('each clashing field takes the chosen side', () => {
@@ -92,6 +107,7 @@ describe('deciding', () => {
       name: 'Fern (Ava)',
       light: 'direct',
       wateringIntervalDays: 4,
+      lastWateredOn: '2026-06-10',
     });
   });
 

@@ -1,5 +1,6 @@
 import { createBdd, test as base } from 'playwright-bdd';
 import type { Plant } from '../../apps/sprout/src/shared/plant.ts';
+import { dayOf } from '../../apps/sprout/src/shared/watering.ts';
 import type { BrowserLog } from '../../packages/core/src/report/bug-report-reporter.ts';
 import { Person } from '../pages/person.ts';
 import { attachIfFailed, recordBrowserLog } from './browser-log.ts';
@@ -76,6 +77,7 @@ export const test = base.extend<Fixtures>({
       name: testPlantName(),
       light: 'medium',
       wateringIntervalDays: 7,
+      lastWateredOn: dayOf(new Date()),
     });
     await use(plant);
     await api.deletePlant(plant.id);

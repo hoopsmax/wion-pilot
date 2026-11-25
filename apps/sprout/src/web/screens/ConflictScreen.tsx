@@ -7,7 +7,7 @@ import { fieldsAfterChoices, type Choice, type Conflict } from '../offline/confl
 import type { FieldName } from '../offline/merge.ts';
 import { useSproutData } from '../offline/SproutDataProvider.tsx';
 
-const FIELDS: FieldName[] = ['name', 'light', 'wateringIntervalDays'];
+const FIELDS: FieldName[] = ['name', 'light', 'wateringIntervalDays', 'lastWateredOn'];
 
 /** True when fields other than the clashing ones were combined from both people's edits. */
 function combinedOtherFields(conflict: Conflict): boolean {
