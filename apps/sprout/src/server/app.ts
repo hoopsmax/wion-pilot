@@ -1,3 +1,4 @@
+import { join } from 'node:path';
 import express, { type NextFunction, type Request, type Response } from 'express';
 import { bodyOf, sendError } from './http.ts';
 import { verifyPassword } from './passwords.ts';
@@ -11,6 +12,8 @@ export interface AppOptions {
   seedFile: string;
   /** Only test mode has the reset endpoint, so a normal run can never wipe its data by accident. */
   testMode: boolean;
+  /** The built web app (dist/). Tests of the API alone leave it out. */
+  webFolder?: string;
 }
 
 function tokenFrom(req: Request): string | undefined {
@@ -18,9 +21,27 @@ function tokenFrom(req: Request): string | undefined {
   return header.startsWith('Bearer ') ? header.slice('Bearer '.length) : undefined;
 }
 
-export function createApp({ store, sessions, seedFile, testMode }: AppOptions): express.Express {
+export function createApp({
+  store,
+  sessions,
+  seedFile,
+  testMode,
+  webFolder,
+}: AppOptions): express.Express {
   const app = express();
   app.use(express.json({ limit: '100kb' }));
+
+  if (webFolder !== undefined) {
+    app.use(express.static(webFolder));
+    // Any other page is a screen of the app (like /plants/new), so a reload there still works.
+    app.use((req, res, next) => {
+      if (req.method !== 'GET' || req.path.startsWith('/api/')) {
+        next();
+        return;
+      }
+      res.sendFile(join(webFolder, 'index.html'));
+    });
+  }
 
   app.post('/api/session', async (req, res) => {
     const { email, password } = bodyOf(req.body);

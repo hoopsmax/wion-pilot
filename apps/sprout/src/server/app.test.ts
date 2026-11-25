@@ -1,4 +1,4 @@
-import { copyFile, mkdtemp, rm, writeFile } from 'node:fs/promises';
+import { copyFile, mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
 import type { Server } from 'node:http';
 import type { AddressInfo } from 'node:net';
 import { tmpdir } from 'node:os';
@@ -33,17 +33,21 @@ let folder: string;
 let server: Server;
 let baseUrl: string;
 
-async function startApp(testMode = false): Promise<void> {
+async function startApp(testMode = false, withWebApp = false): Promise<void> {
   folder = await mkdtemp(join(tmpdir(), 'sprout-app-'));
   const seedFile = join(folder, 'seed.json');
   const dataFile = join(folder, 'db.json');
   await writeFile(seedFile, JSON.stringify(seed));
   await copyFile(seedFile, dataFile);
+  const webFolder = join(folder, 'dist');
+  await mkdir(webFolder);
+  await writeFile(join(webFolder, 'index.html'), '<title>Sprout</title>');
   const app = createApp({
     store: createStore(dataFile),
     sessions: createSessions(),
     seedFile,
     testMode,
+    ...(withWebApp ? { webFolder } : {}),
   });
   server = app.listen(0);
   await new Promise((resolve) => server.once('listening', resolve));
@@ -154,5 +158,26 @@ describe('the reset endpoint', () => {
     const fresh = await signIn('ava@sprout.test', 'pw-ava');
     const plants = (await (await call('GET', '/api/plants', undefined, fresh)).json()) as Plant[];
     expect(plants).toHaveLength(1);
+  });
+});
+
+describe('the web app', () => {
+  beforeEach(async () => {
+    server.close();
+    await rm(folder, { recursive: true, force: true });
+    await startApp(false, true);
+  });
+
+  test.each(['/', '/plants', '/plants/new', '/plants/some-id/edit'])(
+    '%s gets the app page, so a reload works on every screen',
+    async (path) => {
+      const response = await call('GET', path);
+      expect(response.status).toBe(200);
+      expect(await response.text()).toContain('<title>Sprout</title>');
+    },
+  );
+
+  test('API paths are still the API', async () => {
+    expect((await call('GET', '/api/plants')).status).toBe(401);
   });
 });
