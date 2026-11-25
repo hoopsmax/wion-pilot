@@ -23,7 +23,12 @@ export default defineConfig({
   forbidOnly: Boolean(process.env['CI']),
   // No retries: a flaky test must fail visibly, not pass on a second try.
   retries: 0,
-  reporter: [['list'], ['html', { open: 'never' }]],
+  reporter: [
+    ['list'],
+    ['html', { open: 'never' }],
+    // Writes reports/bugs/<feature>--<scenario>.md for every failing test.
+    ['./packages/core/src/report/bug-report-reporter.ts'],
+  ],
   use: {
     baseURL,
     // Evidence for failures, kept only when a test fails (used by M3's bug-report drafts).

@@ -30,8 +30,11 @@ export interface DraftInput {
   browser: string;
   commit?: string;
   evidence: Evidence[];
-  consoleErrors: string[];
-  failedRequests: string[];
+  /** Undefined when no browser log was recorded: then they are unknown, not empty. */
+  consoleErrors: string[] | undefined;
+  failedRequests: string[] | undefined;
+  /** What the reporter could not find out, said openly instead of left out. */
+  notes?: string[];
 }
 
 const NOT_DONE = 'DRAFT: verify before filing.';
@@ -40,7 +43,10 @@ function fence(text: string): string {
   return ['```text', text, '```'].join('\n');
 }
 
-function list(items: string[], whenEmpty: string): string {
+const UNKNOWN = 'Unknown: no browser log was recorded for this test.';
+
+function list(items: string[] | undefined, whenEmpty: string): string {
+  if (items === undefined) return UNKNOWN;
   return items.length === 0 ? whenEmpty : items.map((item) => `- ${item}`).join('\n');
 }
 
@@ -110,6 +116,7 @@ export function buildDraft(input: DraftInput): string {
     '## Failed network requests',
     list(input.failedRequests, 'None.'),
     '',
+    ...(input.notes && input.notes.length > 0 ? ['## Notes', list(input.notes, ''), ''] : []),
     '## Full error',
     fence(stripAnsi(input.errorMessage).trim()),
     '',

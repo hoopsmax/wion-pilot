@@ -75,6 +75,10 @@ describe('a draft with less to report', () => {
     errorMessage: 'Error: Test timeout of 30000ms exceeded.',
   });
 
+  test('has no Notes section when nothing is missing', () => {
+    expect(draft).not.toContain('## Notes');
+  });
+
   test('says "None." instead of leaving sections empty', () => {
     expect(draft).toContain('## Browser console errors\nNone.');
     expect(draft).toContain('## Failed network requests\nNone.');
@@ -85,6 +89,21 @@ describe('a draft with less to report', () => {
   test('without Expected and Received it does not invent them', () => {
     expect(draft).toContain('## Expected\nThe failing step passes.');
     expect(draft).toContain('## Actual\n```text\nError: Test timeout of 30000ms exceeded.\n```');
+  });
+});
+
+describe('without a browser log', () => {
+  test('console errors and requests are "unknown", not "none"', () => {
+    const draft = buildDraft({ ...input, consoleErrors: undefined, failedRequests: undefined });
+    expect(draft).toContain('## Browser console errors\nUnknown: no browser log was recorded');
+    expect(draft).toContain('## Failed network requests\nUnknown: no browser log was recorded');
+  });
+});
+
+describe('notes', () => {
+  test('say openly what the reporter could not find out', () => {
+    const draft = buildDraft({ ...input, notes: ['The .feature lines could not be read.'] });
+    expect(draft).toContain('## Notes\n- The .feature lines could not be read.');
   });
 });
 
