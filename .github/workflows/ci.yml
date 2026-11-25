@@ -24,3 +24,29 @@ jobs:
       - run: npm run check
       # A broken web app build should fail here, not later in the E2E suite.
       - run: npm run build --workspaces --if-present
+
+  e2e:
+    name: E2E tests
+    # No point in starting browsers when lint, types or unit tests already fail.
+    needs: check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      # The browser that matches our Playwright version, with its system libraries.
+      - run: npx playwright install --with-deps chromium
+      - run: npm test
+      - name: Keep the HTML report
+        # Also (and especially) when tests fail: it holds the screenshots, videos and traces.
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 14
