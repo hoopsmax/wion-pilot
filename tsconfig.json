@@ -1,20 +1,4 @@
 {
-  "compilerOptions": {
-    "target": "es2024",
-    "module": "nodenext",
-    "moduleResolution": "nodenext",
-    "types": ["node"],
-    "strict": true,
-    "noUncheckedIndexedAccess": true,
-    "noImplicitOverride": true,
-    "noFallthroughCasesInSwitch": true,
-    "verbatimModuleSyntax": true,
-    "isolatedModules": true,
-    "erasableSyntaxOnly": true,
-    "allowImportingTsExtensions": true,
-    "resolveJsonModule": true,
-    "noEmit": true,
-    "skipLibCheck": true
-  },
-  "include": ["*.ts", "apps/*/src/**/*.ts", "packages/*/src/**/*.ts", "tests/**/*.ts"]
+  "extends": "./tsconfig.base.json",
+  "include": ["*.ts", "packages/*/src/**/*.ts", "tests/**/*.ts"]
 }

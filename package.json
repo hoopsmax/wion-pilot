@@ -14,10 +14,12 @@
   "scripts": {
     "lint": "eslint . && prettier --check .",
     "format": "prettier --write .",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "tsc --noEmit && npm run typecheck --workspaces --if-present",
     "test:unit": "vitest run",
     "check": "npm run lint && npm run typecheck && npm run test:unit",
-    "test": "bddgen && playwright test --pass-with-no-tests"
+    "test": "bddgen && playwright test --pass-with-no-tests",
+    "demo": "npm run demo -w @wion-pilot/sprout",
+    "demo:reset": "npm run reset -w @wion-pilot/sprout"
   },
   "devDependencies": {
     "@eslint/js": "10.0.1",
@@ -30,5 +32,8 @@
     "typescript": "6.0.3",
     "typescript-eslint": "8.74.0",
     "vitest": "5.1.1"
+  },
+  "allowScripts": {
+    "fsevents": false
   }
 }

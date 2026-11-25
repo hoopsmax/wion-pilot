@@ -17,3 +17,9 @@ coverage/
 
 *.log
 .DS_Store
+
+# Sprout's live data: made from data/seed.json on the first run.
+apps/sprout/data/db.json
+
+# Sprout's built web app: made by npm run build.
+apps/sprout/dist/
