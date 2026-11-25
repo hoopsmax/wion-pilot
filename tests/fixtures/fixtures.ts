@@ -17,6 +17,8 @@ interface People {
 export interface ScenarioState {
   /** A plant the scenario added through the form, with the light level it was given. */
   newPlant?: { name: string; light: string };
+  /** The day the scenario treats as today (see "it is … on …'s device"). */
+  today?: string;
   /** The last run of wion map. */
   mapRun?: MapRun;
   /** Sprout's own plants (not test data) before something happened. */

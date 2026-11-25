@@ -34,6 +34,11 @@ export class PlantListPage {
     await expect(this.row(name).getByText(details, { exact: true })).toBeVisible();
   }
 
+  /** The plant's "Watered" button. */
+  async markWatered(name: string): Promise<void> {
+    await this.#page.getByRole('button', { name: `Mark ${name} watered`, exact: true }).click();
+  }
+
   /** A text shown inside one plant's row, for example its "Not synced yet" mark. */
   textInRow(name: string, text: string): Locator {
     return this.row(name).getByText(text);

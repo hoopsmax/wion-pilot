@@ -75,6 +75,14 @@ export class Person {
     this.#offline = false;
   }
 
+  /**
+   * Makes `day` this browser's today, while timers keep running normally (syncing still works).
+   * Must happen before the app is loaded. Noon, so no time zone can turn it into another day.
+   */
+  async fixToday(day: string): Promise<void> {
+    await this.page.clock.setFixedTime(new Date(`${day}T12:00:00`));
+  }
+
   /** Lets the test move this browser's time forward; must happen before the app is loaded. */
   async controlClock(): Promise<void> {
     await this.page.clock.install();
