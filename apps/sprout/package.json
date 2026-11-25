@@ -4,6 +4,13 @@
   "description": "Sprout: a fictional plant-care app. It is the demo app that Wion-Pilot tests.",
   "type": "module",
   "scripts": {
-    "typecheck": "tsc --noEmit -p ."
+    "typecheck": "tsc --noEmit -p .",
+    "start": "node src/server/main.ts"
+  },
+  "dependencies": {
+    "express": "5.3.0"
+  },
+  "devDependencies": {
+    "@types/express": "5.0.6"
   }
 }

@@ -29,6 +29,15 @@ function isSproutData(value: unknown): value is SproutData {
   );
 }
 
+/** Reads a data or seed file and checks its shape, so a broken file fails with a clear message. */
+export async function readSproutData(path: string): Promise<SproutData> {
+  const data = await readJsonFile(path);
+  if (!isSproutData(data)) {
+    throw new Error(`Sprout data file ${path} has the wrong shape. Run npm run demo:reset.`);
+  }
+  return data;
+}
+
 /**
  * Keeps all Sprout data in one JSON file. The file is read on every call, so
  * `npm run demo:reset` takes effect even while the server is running.
@@ -44,13 +53,7 @@ export function createStore(filePath: string, now: () => string = () => new Date
     return result;
   }
 
-  async function load(): Promise<SproutData> {
-    const data = await readJsonFile(filePath);
-    if (!isSproutData(data)) {
-      throw new Error(`Sprout data file ${filePath} has the wrong shape. Run npm run demo:reset.`);
-    }
-    return data;
-  }
+  const load = () => readSproutData(filePath);
 
   return {
     async findUserByEmail(email: string): Promise<User | undefined> {

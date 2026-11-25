@@ -1,0 +1,63 @@
+{
+  "users": [
+    {
+      "id": "a0a0a0a0-0000-4000-8000-00000000a0a0",
+      "email": "ava@sprout.test",
+      "name": "Ava",
+      "passwordHash": "scrypt$f33ad166d2901b2e9f97f2730e13690c$3911ddcb73aef0df7ac95cae6ac32e914ace0e501955f6a7bf8b71b2eb8e80d5"
+    },
+    {
+      "id": "b0b0b0b0-0000-4000-8000-00000000b0b0",
+      "email": "ben@sprout.test",
+      "name": "Ben",
+      "passwordHash": "scrypt$311bd138bcd9f5baa490d1c1ee0779bc$1633ee99ec65822bd7620b3ccd5bdecc3e0ea4b86a925da50df4218fd83edb02"
+    }
+  ],
+  "plants": [
+    {
+      "id": "5eed0000-0000-4000-8000-000000000001",
+      "name": "Kitchen basil",
+      "light": "direct",
+      "wateringIntervalDays": 2,
+      "version": 1,
+      "updatedAt": "2026-01-01T09:00:00.000Z",
+      "updatedBy": "a0a0a0a0-0000-4000-8000-00000000a0a0"
+    },
+    {
+      "id": "5eed0000-0000-4000-8000-000000000002",
+      "name": "Window fern",
+      "light": "medium",
+      "wateringIntervalDays": 4,
+      "version": 1,
+      "updatedAt": "2026-01-01T09:00:00.000Z",
+      "updatedBy": "a0a0a0a0-0000-4000-8000-00000000a0a0"
+    },
+    {
+      "id": "5eed0000-0000-4000-8000-000000000003",
+      "name": "Hallway snake plant",
+      "light": "low",
+      "wateringIntervalDays": 21,
+      "version": 1,
+      "updatedAt": "2026-01-01T09:00:00.000Z",
+      "updatedBy": "a0a0a0a0-0000-4000-8000-00000000a0a0"
+    },
+    {
+      "id": "5eed0000-0000-4000-8000-000000000004",
+      "name": "Desk pothos",
+      "light": "bright-indirect",
+      "wateringIntervalDays": 7,
+      "version": 1,
+      "updatedAt": "2026-01-01T09:00:00.000Z",
+      "updatedBy": "a0a0a0a0-0000-4000-8000-00000000a0a0"
+    },
+    {
+      "id": "5eed0000-0000-4000-8000-000000000005",
+      "name": "Bathroom peace lily",
+      "light": "medium",
+      "wateringIntervalDays": 5,
+      "version": 1,
+      "updatedAt": "2026-01-01T09:00:00.000Z",
+      "updatedBy": "a0a0a0a0-0000-4000-8000-00000000a0a0"
+    }
+  ]
+}
