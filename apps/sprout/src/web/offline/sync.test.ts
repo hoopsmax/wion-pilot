@@ -26,6 +26,7 @@ const plant = (id: string, name: string, version: number): Plant => ({
   version,
   updatedAt: '2026-01-01T00:00:00.000Z',
   updatedBy: 'ben',
+  updatedByName: 'Ben',
 });
 
 /** A fake server: answers each send with the next queued answer, and records what it got. */

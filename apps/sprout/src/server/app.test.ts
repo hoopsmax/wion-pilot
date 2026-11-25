@@ -25,6 +25,7 @@ const seed: SproutData = {
       version: 1,
       updatedAt: '2026-01-01T00:00:00.000Z',
       updatedBy: 'ava',
+      updatedByName: 'Ava',
     },
   ],
 };
@@ -128,7 +129,12 @@ describe('plants', () => {
     const second = await call('PUT', `/api/plants/${plantId}`, edit(1, 'Fern (Ben)'), ben);
     expect(second.status).toBe(409);
     const { latest } = (await second.json()) as { latest: Plant };
-    expect(latest).toMatchObject({ name: 'Fern (Ava)', version: 2, updatedBy: 'ava' });
+    expect(latest).toMatchObject({
+      name: 'Fern (Ava)',
+      version: 2,
+      updatedBy: 'ava',
+      updatedByName: 'Ava',
+    });
   });
 
   test('a body that is not JSON is a clear 400', async () => {

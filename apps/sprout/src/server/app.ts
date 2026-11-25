@@ -55,7 +55,7 @@ export function createApp({
       return;
     }
     res.json({
-      token: sessions.start(user.id),
+      token: sessions.start({ id: user.id, name: user.name }),
       user: { id: user.id, name: user.name, email: user.email },
     });
   });
@@ -70,12 +70,12 @@ export function createApp({
 
   app.use('/api', (req, res, next) => {
     const token = tokenFrom(req);
-    const userId = token === undefined ? undefined : sessions.userIdFor(token);
-    if (userId === undefined) {
+    const editor = token === undefined ? undefined : sessions.editorFor(token);
+    if (editor === undefined) {
       sendError(res, 401, 'Please sign in.');
       return;
     }
-    res.locals['userId'] = userId;
+    res.locals['editor'] = editor;
     next();
   });
 

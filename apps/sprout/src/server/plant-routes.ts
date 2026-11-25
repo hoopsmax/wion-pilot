@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { validatePlantFields } from '../shared/plant.ts';
-import { bodyOf, currentUserId, isUuid, sendError } from './http.ts';
+import { bodyOf, currentEditor, isUuid, sendError } from './http.ts';
 import type { Store } from './store.ts';
 
 export function plantRoutes(store: Store): Router {
@@ -22,7 +22,7 @@ export function plantRoutes(store: Store): Router {
       sendError(res, 400, 'Some fields are not valid.', validation.errors);
       return;
     }
-    const plant = await store.createPlant(body['id'], validation.fields, currentUserId(res));
+    const plant = await store.createPlant(body['id'], validation.fields, currentEditor(res));
     res.status(201).json(plant);
   });
 
@@ -42,7 +42,7 @@ export function plantRoutes(store: Store): Router {
       req.params.id,
       baseVersion,
       validation.fields,
-      currentUserId(res),
+      currentEditor(res),
     );
     if (result.status === 'not-found') {
       sendError(res, 404, 'This plant does not exist (any more).');

@@ -21,7 +21,8 @@
       "wateringIntervalDays": 2,
       "version": 1,
       "updatedAt": "2026-01-01T09:00:00.000Z",
-      "updatedBy": "a0a0a0a0-0000-4000-8000-00000000a0a0"
+      "updatedBy": "a0a0a0a0-0000-4000-8000-00000000a0a0",
+      "updatedByName": "Ava"
     },
     {
       "id": "5eed0000-0000-4000-8000-000000000002",
@@ -30,7 +31,8 @@
       "wateringIntervalDays": 4,
       "version": 1,
       "updatedAt": "2026-01-01T09:00:00.000Z",
-      "updatedBy": "a0a0a0a0-0000-4000-8000-00000000a0a0"
+      "updatedBy": "a0a0a0a0-0000-4000-8000-00000000a0a0",
+      "updatedByName": "Ava"
     },
     {
       "id": "5eed0000-0000-4000-8000-000000000003",
@@ -39,7 +41,8 @@
       "wateringIntervalDays": 21,
       "version": 1,
       "updatedAt": "2026-01-01T09:00:00.000Z",
-      "updatedBy": "a0a0a0a0-0000-4000-8000-00000000a0a0"
+      "updatedBy": "a0a0a0a0-0000-4000-8000-00000000a0a0",
+      "updatedByName": "Ava"
     },
     {
       "id": "5eed0000-0000-4000-8000-000000000004",
@@ -48,7 +51,8 @@
       "wateringIntervalDays": 7,
       "version": 1,
       "updatedAt": "2026-01-01T09:00:00.000Z",
-      "updatedBy": "a0a0a0a0-0000-4000-8000-00000000a0a0"
+      "updatedBy": "a0a0a0a0-0000-4000-8000-00000000a0a0",
+      "updatedByName": "Ava"
     },
     {
       "id": "5eed0000-0000-4000-8000-000000000005",
@@ -57,7 +61,8 @@
       "wateringIntervalDays": 5,
       "version": 1,
       "updatedAt": "2026-01-01T09:00:00.000Z",
-      "updatedBy": "a0a0a0a0-0000-4000-8000-00000000a0a0"
+      "updatedBy": "a0a0a0a0-0000-4000-8000-00000000a0a0",
+      "updatedByName": "Ava"
     }
   ]
 }

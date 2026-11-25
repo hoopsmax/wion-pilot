@@ -14,6 +14,7 @@ const fern: Plant = {
   version: 3,
   updatedAt: '2026-01-01T00:00:00.000Z',
   updatedBy: 'ava',
+  updatedByName: 'Ava',
 };
 
 const newId = () => 'new-id';

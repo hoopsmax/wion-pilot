@@ -1,4 +1,4 @@
-import type { Plant, PlantFields } from '../shared/plant.ts';
+import type { Editor, Plant, PlantFields } from '../shared/plant.ts';
 import { readJsonFile, writeJsonFileAtomic } from './json-file.ts';
 
 export interface User {
@@ -67,12 +67,19 @@ export function createStore(filePath: string, now: () => string = () => new Date
     },
 
     /** Creating the same id twice returns the first plant: a retried request makes no duplicate. */
-    createPlant(id: string, fields: PlantFields, userId: string): Promise<Plant> {
+    createPlant(id: string, fields: PlantFields, editor: Editor): Promise<Plant> {
       return oneAtATime(async () => {
         const data = await load();
         const existing = data.plants.find((plant) => plant.id === id);
         if (existing) return existing;
-        const plant: Plant = { id, ...fields, version: 1, updatedAt: now(), updatedBy: userId };
+        const plant: Plant = {
+          id,
+          ...fields,
+          version: 1,
+          updatedAt: now(),
+          updatedBy: editor.id,
+          updatedByName: editor.name,
+        };
         await writeJsonFileAtomic(filePath, { ...data, plants: [...data.plants, plant] });
         return plant;
       });
@@ -83,7 +90,7 @@ export function createStore(filePath: string, now: () => string = () => new Date
       id: string,
       baseVersion: number,
       fields: PlantFields,
-      userId: string,
+      editor: Editor,
     ): Promise<UpdateResult> {
       return oneAtATime(async () => {
         const data = await load();
@@ -95,7 +102,8 @@ export function createStore(filePath: string, now: () => string = () => new Date
           ...fields,
           version: current.version + 1,
           updatedAt: now(),
-          updatedBy: userId,
+          updatedBy: editor.id,
+          updatedByName: editor.name,
         };
         const plants = data.plants.map((p) => (p.id === id ? plant : p));
         await writeJsonFileAtomic(filePath, { ...data, plants });

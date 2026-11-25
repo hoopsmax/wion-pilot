@@ -7,6 +7,8 @@ import { createStore, type Store } from './store.ts';
 
 const fern: PlantFields = { name: 'Window fern', light: 'medium', wateringIntervalDays: 7 };
 const plantId = '11111111-1111-4111-8111-111111111111';
+const ava = { id: 'ava', name: 'Ava' };
+const ben = { id: 'ben', name: 'Ben' };
 
 let folder: string;
 let file: string;
@@ -25,14 +27,20 @@ afterEach(async () => {
 
 describe('createPlant', () => {
   test('starts a new plant at version 1', async () => {
-    const plant = await store.createPlant(plantId, fern, 'ava');
-    expect(plant).toMatchObject({ id: plantId, ...fern, version: 1, updatedBy: 'ava' });
+    const plant = await store.createPlant(plantId, fern, ava);
+    expect(plant).toMatchObject({
+      id: plantId,
+      ...fern,
+      version: 1,
+      updatedBy: 'ava',
+      updatedByName: 'Ava',
+    });
     expect(await store.listPlants()).toEqual([plant]);
   });
 
   test('creating the same id twice keeps one plant', async () => {
-    const first = await store.createPlant(plantId, fern, 'ava');
-    const second = await store.createPlant(plantId, { ...fern, name: 'Other' }, 'ava');
+    const first = await store.createPlant(plantId, fern, ava);
+    const second = await store.createPlant(plantId, { ...fern, name: 'Other' }, ava);
     expect(second).toEqual(first);
     expect(await store.listPlants()).toHaveLength(1);
   });
@@ -40,11 +48,11 @@ describe('createPlant', () => {
 
 describe('updatePlant', () => {
   beforeEach(async () => {
-    await store.createPlant(plantId, fern, 'ava');
+    await store.createPlant(plantId, fern, ava);
   });
 
   test('saves an edit based on the current version and raises the version', async () => {
-    const result = await store.updatePlant(plantId, 1, { ...fern, name: 'Big fern' }, 'ben');
+    const result = await store.updatePlant(plantId, 1, { ...fern, name: 'Big fern' }, ben);
     expect(result).toMatchObject({
       status: 'updated',
       plant: { name: 'Big fern', version: 2, updatedBy: 'ben' },
@@ -52,8 +60,8 @@ describe('updatePlant', () => {
   });
 
   test('reports a conflict when the edit is based on an old version', async () => {
-    await store.updatePlant(plantId, 1, { ...fern, name: 'Ava was here' }, 'ava');
-    const result = await store.updatePlant(plantId, 1, { ...fern, name: 'Ben was here' }, 'ben');
+    await store.updatePlant(plantId, 1, { ...fern, name: 'Ava was here' }, ava);
+    const result = await store.updatePlant(plantId, 1, { ...fern, name: 'Ben was here' }, ben);
     expect(result).toMatchObject({
       status: 'conflict',
       latest: { name: 'Ava was here', version: 2 },
@@ -63,21 +71,21 @@ describe('updatePlant', () => {
 
   test('two edits sent at the same moment: one wins, the other is a conflict', async () => {
     const results = await Promise.all([
-      store.updatePlant(plantId, 1, { ...fern, name: 'First' }, 'ava'),
-      store.updatePlant(plantId, 1, { ...fern, name: 'Second' }, 'ben'),
+      store.updatePlant(plantId, 1, { ...fern, name: 'First' }, ava),
+      store.updatePlant(plantId, 1, { ...fern, name: 'Second' }, ben),
     ]);
     expect(results.map((result) => result.status).sort()).toEqual(['conflict', 'updated']);
   });
 
   test('reports a missing plant', async () => {
     const otherId = '22222222-2222-4222-8222-222222222222';
-    expect(await store.updatePlant(otherId, 1, fern, 'ava')).toEqual({ status: 'not-found' });
+    expect(await store.updatePlant(otherId, 1, fern, ava)).toEqual({ status: 'not-found' });
   });
 });
 
 describe('deletePlant', () => {
   test('removes the plant, and deleting it again does no harm', async () => {
-    await store.createPlant(plantId, fern, 'ava');
+    await store.createPlant(plantId, fern, ava);
     await store.deletePlant(plantId);
     await store.deletePlant(plantId);
     expect(await store.listPlants()).toEqual([]);

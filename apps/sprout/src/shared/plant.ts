@@ -18,6 +18,14 @@ export interface Plant extends PlantFields {
   version: number;
   updatedAt: string;
   updatedBy: string;
+  /** Shown to other people, for example on the conflict screen. */
+  updatedByName: string;
+}
+
+/** The signed-in person who saves a change. */
+export interface Editor {
+  id: string;
+  name: string;
 }
 
 export type FieldErrors = Partial<Record<keyof PlantFields, string>>;

@@ -1,5 +1,5 @@
 import type { Response } from 'express';
-import type { FieldErrors } from '../shared/plant.ts';
+import type { Editor, FieldErrors } from '../shared/plant.ts';
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -23,11 +23,11 @@ export function sendError(
   res.status(status).json({ error: { message, ...(fields ? { fields } : {}) } });
 }
 
-/** The signed-in user's id, set by the sign-in check in app.ts. */
-export function currentUserId(res: Response): string {
-  const userId: unknown = res.locals['userId'];
-  if (typeof userId !== 'string') {
-    throw new Error('currentUserId was called on a route without the sign-in check.');
+/** The signed-in user, set by the sign-in check in app.ts. */
+export function currentEditor(res: Response): Editor {
+  const editor: unknown = res.locals['editor'];
+  if (typeof editor !== 'object' || editor === null) {
+    throw new Error('currentEditor was called on a route without the sign-in check.');
   }
-  return userId;
+  return editor as Editor;
 }
