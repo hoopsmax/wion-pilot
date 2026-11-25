@@ -15,7 +15,6 @@ export class PlantFormPage {
   readonly interval: Locator;
   readonly save: Locator;
   readonly cancel: Locator;
-  readonly #listHeading: Locator;
 
   constructor(page: Page) {
     this.#page = page;
@@ -24,7 +23,6 @@ export class PlantFormPage {
     this.interval = page.getByLabel('Watering interval (days)', { exact: true });
     this.save = page.getByRole('button', { name: 'Save' });
     this.cancel = page.getByRole('link', { name: 'Cancel' });
-    this.#listHeading = page.getByRole('heading', { name: 'Plants', exact: true });
   }
 
   heading(title: 'Add plant' | 'Edit plant'): Locator {
@@ -48,11 +46,13 @@ export class PlantFormPage {
   }
 
   /**
-   * Saves and waits until the plant list is back. The app queues the change before it shows the
-   * list, so after this the change is in the outbox, not just typed into the form.
+   * Saves and waits until the form is gone. The app queues the change before it leaves the form,
+   * so after this the change is in the outbox, not just typed in. It waits for the form to go,
+   * not for the list to appear: when a conflict is found at once, the list shows for only a few
+   * milliseconds before the conflict screen opens, and a test could miss it.
    */
-  async saveAndReturnToList(): Promise<void> {
+  async saveAndLeave(): Promise<void> {
     await this.save.click();
-    await expect(this.#listHeading).toBeVisible();
+    await expect(this.save).toBeHidden();
   }
 }

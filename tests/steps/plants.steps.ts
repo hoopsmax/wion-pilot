@@ -15,7 +15,7 @@ When('{word} starts editing the test plant', async ({ people, testPlant }, name:
 
 When('{word} saves the form', async ({ people }, name: string) => {
   const person = await people.as(name);
-  await person.form.saveAndReturnToList();
+  await person.form.saveAndLeave();
 });
 
 Then(
@@ -154,7 +154,7 @@ When(
     scenario.newPlant = { name: plantName, light };
     await person.plantList.addPlant.click();
     await person.form.fill({ name: plantName, light, interval: days });
-    await person.form.saveAndReturnToList();
+    await person.form.saveAndLeave();
   },
 );
 

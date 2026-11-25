@@ -51,11 +51,11 @@ export class Person {
   }
 
   /**
-   * Saves the form. Online, it also waits until the change really reached the server: the list
-   * comes back (change queued), then the banner says Synced and nothing is marked unsynced.
+   * Saves the form. Online, it also waits until the change really reached the server: the form
+   * is gone (change queued), then the banner says Synced and nothing is marked unsynced.
    */
   async saveForm(): Promise<void> {
-    await this.form.saveAndReturnToList();
+    await this.form.saveAndLeave();
     if (!this.#offline) await this.expectAllSynced();
   }
 
