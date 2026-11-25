@@ -9,7 +9,13 @@ interface People {
   as(name: string): Promise<Person>;
 }
 
+/** What one scenario remembers between its steps. Fresh for every test, never shared. */
+export interface ScenarioState {
+  newPlantName?: string;
+}
+
 interface Fixtures {
+  scenario: ScenarioState;
   people: People;
   /** Sprout's API, signed in as Ben, for setting up data and checking the server. */
   api: SproutApi;
@@ -20,6 +26,11 @@ interface Fixtures {
 }
 
 export const test = base.extend<Fixtures>({
+  // eslint-disable-next-line no-empty-pattern -- Playwright fixtures always take their dependencies as the first argument.
+  scenario: async ({}, use) => {
+    await use({});
+  },
+
   people: async ({ page, browser, baseURL }, use) => {
     const opened = new Map<string, Person>();
     const extraContexts: { close(): Promise<void> }[] = [];

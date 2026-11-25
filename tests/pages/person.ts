@@ -1,5 +1,6 @@
 import type { BrowserContext, Page } from '@playwright/test';
 import { CREDENTIALS, type PersonName } from '../fixtures/people.ts';
+import { PlantFormPage } from './plant-form-page.ts';
 import { PlantListPage } from './plant-list-page.ts';
 import { SignInPage } from './sign-in-page.ts';
 import { SyncBanner } from './sync-banner.ts';
@@ -11,6 +12,7 @@ export class Person {
   readonly context: BrowserContext;
   readonly signInPage: SignInPage;
   readonly plantList: PlantListPage;
+  readonly form: PlantFormPage;
   readonly banner: SyncBanner;
 
   constructor(name: PersonName, page: Page) {
@@ -19,12 +21,20 @@ export class Person {
     this.context = page.context();
     this.signInPage = new SignInPage(page);
     this.plantList = new PlantListPage(page);
+    this.form = new PlantFormPage(page);
     this.banner = new SyncBanner(page);
   }
 
   async signIn(password: string = CREDENTIALS[this.name].password): Promise<void> {
     await this.signInPage.open();
     await this.signInPage.signIn(CREDENTIALS[this.name].email, password);
+  }
+
+  /** Opens a plant's edit form from a freshly loaded list, so the list has synced first. */
+  async startEditing(plantName: string): Promise<void> {
+    await this.plantList.open();
+    await this.plantList.editLink(plantName).click();
+    await this.form.waitUntilReady();
   }
 
   async goOffline(): Promise<void> {

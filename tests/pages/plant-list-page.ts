@@ -26,6 +26,11 @@ export class PlantListPage {
     return this.#page.getByRole('link', { name: `Edit ${name}`, exact: true });
   }
 
+  /** The plant's row shows exactly these details, for example "Direct sun · Water every 3 days". */
+  async expectPlant(name: string, details: string): Promise<void> {
+    await expect(this.row(name).getByText(details, { exact: true })).toBeVisible();
+  }
+
   notSynced(name: string): Locator {
     return this.row(name).getByText('Not synced yet');
   }
