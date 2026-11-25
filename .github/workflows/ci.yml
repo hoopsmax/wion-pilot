@@ -104,6 +104,42 @@ jobs:
           path: reports/bugs/
           retention-days: 14
 
+  app-map:
+    name: App map
+    # Runs the README's commands on every push and keeps the map of Sprout to look at (M4).
+    needs: check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - run: npm run build -w @wion-pilot/sprout
+      - name: Start Sprout on a throwaway copy of the seed data
+        run: |
+          SPROUT_DATA_FILE="$RUNNER_TEMP/sprout-db.json" node apps/sprout/src/server/main.ts &
+          for attempt in $(seq 1 30); do
+            curl -sf -o /dev/null http://localhost:4600 && exit 0
+            sleep 1
+          done
+          echo "Sprout did not start within 30 seconds."
+          exit 1
+      - run: npm run map:sprout
+      - name: Keep the map
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: app-map
+          path: .wion/map/
+          # The folder .wion starts with a dot; upload-artifact skips such paths unless told not to.
+          include-hidden-files: true
+          retention-days: 14
+
   publish-report:
     name: Publish the report
     # Only main is published, and also after failing tests: the page always shows the latest run.
