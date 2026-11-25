@@ -50,11 +50,59 @@ jobs:
           name: playwright-report
           path: playwright-report/
           retention-days: 14
+      - name: Keep the bug-report drafts
+        # Drafts are written only for failing tests, so this step runs only then.
+        if: ${{ failure() }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: bug-report-drafts
+          path: reports/bugs/
+          if-no-files-found: ignore
+          retention-days: 14
       - name: Prepare the report for GitHub Pages
         if: ${{ !cancelled() && github.event_name == 'push' && github.ref == 'refs/heads/main' }}
         uses: actions/upload-pages-artifact@v5
         with:
           path: playwright-report/
+
+  bug-report-demo:
+    name: Bug-report demo
+    # Proves on every push that a deliberately failing test produces a complete draft (M3).
+    needs: check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - name: Run the scenario that fails on purpose
+        run: |
+          if npm run demo:bug; then
+            echo "The @demo-bug scenario passed, but it must fail."
+            exit 1
+          fi
+      - name: Check that the draft is complete
+        run: |
+          draft=reports/bugs/demo-bug--a-deliberately-wrong-expectation.md
+          test -f "$draft" || { echo "No draft was written: $draft"; exit 1; }
+          for text in 'DRAFT: verify before filing' '(fails here)' '(not run)' \
+            '"Welcome back!"' 'Email or password is wrong.' '[Screenshot](' '[Trace](' \
+            'POST /api/session → 401'; do
+            grep -qF "$text" "$draft" || { echo "Missing in the draft: $text"; exit 1; }
+          done
+          echo "The draft is complete."
+      - name: Keep the demo draft
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: bug-report-demo
+          path: reports/bugs/
+          retention-days: 14
 
   publish-report:
     name: Publish the report
