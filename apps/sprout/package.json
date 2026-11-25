@@ -1,0 +1,9 @@
+{
+  "name": "@wion-pilot/sprout",
+  "private": true,
+  "description": "Sprout: a fictional plant-care app. It is the demo app that Wion-Pilot tests.",
+  "type": "module",
+  "scripts": {
+    "typecheck": "tsc --noEmit -p ."
+  }
+}
