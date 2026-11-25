@@ -20,7 +20,9 @@
     "test": "bddgen && playwright test",
     "demo": "npm run demo -w @wion-pilot/sprout",
     "demo:reset": "npm run reset -w @wion-pilot/sprout",
-    "demo:bug": "WION_DEMO_BUG=1 npm test -- --grep @demo-bug"
+    "demo:bug": "WION_DEMO_BUG=1 npm test -- --grep @demo-bug",
+    "wion": "node packages/cli/src/main.ts",
+    "map:sprout": "SPROUT_PASSWORD=sprout-ava npm run wion -- map http://localhost:4600"
   },
   "devDependencies": {
     "@eslint/js": "10.0.1",
