@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { api, type Session } from './api.ts';
 import { navigate, useRoute } from './navigation.ts';
-import { SproutDataProvider } from './offline/SproutDataProvider.tsx';
+import { SproutDataProvider, useSproutData } from './offline/SproutDataProvider.tsx';
 import { SyncBanner } from './offline/SyncBanner.tsx';
 import type { Route } from './router.ts';
 import { ConflictScreen } from './screens/ConflictScreen.tsx';
@@ -26,6 +26,20 @@ function Screen({
     return <PlantForm key={route.id} plantId={route.id} />;
   }
   return <PlantList session={session} onSignOut={onSignOut} />;
+}
+
+/**
+ * Opens the conflict screen as soon as sync finds a conflict, one at a time. Only from the plant
+ * list: someone typing in the form keeps their work and gets the banner's "Review" link instead.
+ */
+function OpenConflicts({ route }: { route: Route }) {
+  const firstConflict = useSproutData().conflicts[0]?.plantId;
+  useEffect(() => {
+    if (firstConflict !== undefined && route.name === 'plants') {
+      navigate(`/plants/${encodeURIComponent(firstConflict)}/conflict`);
+    }
+  }, [firstConflict, route.name]);
+  return null;
 }
 
 export function App() {
@@ -60,6 +74,7 @@ export function App() {
   return (
     <SproutDataProvider session={session} onUnauthorized={forgetSession}>
       <SyncBanner />
+      <OpenConflicts route={route} />
       <Screen route={route} session={session} onSignOut={signOut} />
     </SproutDataProvider>
   );

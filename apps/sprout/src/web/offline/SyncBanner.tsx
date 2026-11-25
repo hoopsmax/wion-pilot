@@ -1,3 +1,4 @@
+import { Link } from '../Link.tsx';
 import { useSproutData } from './SproutDataProvider.tsx';
 
 function changes(count: number): string {
@@ -23,7 +24,8 @@ export function SyncBanner() {
         <p className="sync-attention">
           {conflicts.length === 1
             ? '1 change needs your decision'
-            : `${String(conflicts.length)} changes need your decision`}
+            : `${String(conflicts.length)} changes need your decision`}{' '}
+          <Link href={`/plants/${conflicts[0]?.plantId ?? ''}/conflict`}>Review</Link>
         </p>
       )}
       {problem && <p className="sync-attention">Sync stopped: {problem}</p>}
