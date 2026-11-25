@@ -31,6 +31,7 @@ export default defineConfig(
     'blob-report/',
     'coverage/',
     '.wion/',
+    'apps/*/dist/',
   ]),
   eslint.configs.recommended,
   tseslint.configs.strictTypeChecked,
