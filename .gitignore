@@ -1,0 +1,19 @@
+node_modules/
+
+# Keys come from environment variables and must never be committed.
+.env
+.env.*
+!.env.example
+
+# Runtime output (app map, AI proposals, ledger) is rebuilt on every run.
+.wion/
+
+# Test output is regenerated on every run.
+.features-gen/
+test-results/
+playwright-report/
+blob-report/
+coverage/
+
+*.log
+.DS_Store
