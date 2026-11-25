@@ -12,12 +12,6 @@ export type Change =
       fields: PlantFields;
     };
 
-/** A change the server refused because someone else saved the plant first. */
-export interface Conflict {
-  change: Change;
-  latest: Plant;
-}
-
 /** A plant as the user sees it: the server copy with their waiting changes applied. */
 export interface ShownPlant extends PlantFields {
   id: string;

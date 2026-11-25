@@ -28,7 +28,7 @@ export async function syncOnce(store: LocalStore, transport: Transport): Promise
     const result = await transport.send(change);
     if (result.status === 'offline' || result.status === 'unauthorized') return result.status;
     if (result.status === 'sent') await store.markSent(change, result.plant);
-    else await store.moveToConflicts(change, result.latest);
+    else await store.settleConflict(change, result.latest);
   }
 
   const fetched = await transport.fetchPlants();

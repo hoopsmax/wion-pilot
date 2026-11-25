@@ -12,7 +12,8 @@ import type { PlantFields } from '../../shared/plant.ts';
 import type { Session } from '../api.ts';
 import { openKeyValue } from './idb.ts';
 import { createLocalStore, type LocalState, type LocalStore } from './local-store.ts';
-import { changeFor, shownPlants, type Conflict, type ShownPlant } from './outbox.ts';
+import type { Conflict } from './conflicts.ts';
+import { changeFor, shownPlants, type ShownPlant } from './outbox.ts';
 import { syncOnce } from './sync.ts';
 import { apiTransport } from './transport.ts';
 

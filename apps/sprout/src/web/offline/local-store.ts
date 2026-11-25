@@ -1,12 +1,6 @@
-import type { Plant } from '../../shared/plant.ts';
-import {
-  afterSent,
-  enqueue,
-  upsertPlant,
-  withoutPlant,
-  type Change,
-  type Conflict,
-} from './outbox.ts';
+import type { Plant, PlantFields } from '../../shared/plant.ts';
+import { decideConflict, settleConflict, type Conflict } from './conflicts.ts';
+import { afterSent, enqueue, upsertPlant, type Change } from './outbox.ts';
 
 /** Where the browser keeps its data: IndexedDB in the app, a Map in unit tests. */
 export interface KeyValue {
@@ -61,19 +55,12 @@ export function createLocalStore(keyValue: KeyValue) {
         plants: upsertPlant(state.plants, saved),
       })),
 
-    /** Keeps the user's latest version of the change next to the server's, for them to decide. */
-    moveToConflicts: (sent: Change, latest: Plant) =>
-      update((state) => {
-        const mine = state.outbox.find((change) => change.plantId === sent.plantId) ?? sent;
-        return {
-          outbox: withoutPlant(state.outbox, sent.plantId),
-          conflicts: [
-            ...state.conflicts.filter((conflict) => conflict.change.plantId !== sent.plantId),
-            { change: mine, latest },
-          ],
-          plants: upsertPlant(state.plants, latest),
-        };
-      }),
+    /** Combines the edits automatically, or keeps them side by side for the user to decide. */
+    settleConflict: (sent: Change, latest: Plant) =>
+      update((state) => settleConflict(state, sent, latest)),
+
+    decideConflict: (plantId: string, fields: PlantFields) =>
+      update((state) => decideConflict(state, plantId, fields)),
 
     replacePlants: (plants: Plant[]) => update(() => ({ plants })),
   };

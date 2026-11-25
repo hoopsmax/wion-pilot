@@ -87,7 +87,7 @@ describe('syncOnce', () => {
     expect((await store.load()).outbox).toEqual([basil, fernEdit]);
   });
 
-  test('conflict: the change moves to the conflicts with the latest plant, nothing is lost', async () => {
+  test('same field changed by both: kept as a conflict about that field, nothing is lost', async () => {
     await store.enqueue(fernEdit);
     const latest = plant('fern', 'Ben renamed it', 2);
     const { transport } = fakeTransport([{ status: 'conflict', latest }]);
@@ -95,7 +95,28 @@ describe('syncOnce', () => {
     expect(await syncOnce(store, transport)).toBe('synced');
     const state = await store.load();
     expect(state.outbox).toEqual([]);
-    expect(state.conflicts).toEqual([{ change: fernEdit, latest }]);
+    expect(state.conflicts).toEqual([
+      {
+        plantId: 'fern',
+        mine: fields('Big fern'),
+        latest,
+        clashes: ['name'],
+        merged: fields('Ben renamed it'),
+      },
+    ]);
+  });
+
+  test('different fields changed: merged and sent again in the same round, no conflict', async () => {
+    await store.enqueue(fernEdit);
+    const latest = { ...plant('fern', 'Window fern', 2), wateringIntervalDays: 9 };
+    const { transport, sent } = fakeTransport([
+      { status: 'conflict', latest },
+      { status: 'sent', plant: { ...latest, name: 'Big fern', version: 3 } },
+    ]);
+
+    expect(await syncOnce(store, transport)).toBe('synced');
+    expect(sent[1]?.fields).toEqual({ ...fields('Big fern'), wateringIntervalDays: 9 });
+    expect(await store.load()).toMatchObject({ outbox: [], conflicts: [] });
   });
 
   test('a conflict does not stop the changes behind it', async () => {
