@@ -24,6 +24,7 @@ Sprout is a small, made-up plant-care app (`apps/sprout`). It exists to show flo
 
 - **Offline mode.** Every change is saved in the browser first (an outbox in IndexedDB) and sent when the connection is there. A banner always says **Offline**, **Syncing** or **Synced**, and changes that have not reached the server show "Not synced yet".
 - **Two people editing the same plant.** Each plant has a version number. When two edits meet, Sprout compares them field by field: fields only one person changed are combined automatically, and equal values are not a conflict. Only fields both people changed to different values are shown on a conflict screen, side by side ("Yours" and "Latest (Ben)"), for the user to choose.
+- **Watering reminders.** Each plant says when to water it next, counted in calendar days from its last watering, and a **Watered** button starts the count again. Tests fix "today" with Playwright's clock.
 - **No silent data loss.** A change is never dropped: it waits in the outbox, or it waits for a decision. Signing out is blocked while changes are still waiting.
 
 ## Requirements
@@ -74,6 +75,10 @@ Start it with `npm run demo` and open http://localhost:4600. The two demo users 
 | Ava | `ava@sprout.test` | `sprout-ava` |
 | Ben | `ben@sprout.test` | `sprout-ben` |
 
+**Watering reminders**
+
+Each plant says when it needs water next: "Water in 3 days", "Water tomorrow", "Water today" or "2 days overdue". **Watered** starts the count again from today, also offline. If two people water the same plant, the later day simply wins; it is never a conflict. A fresh demo (`npm run demo:reset`) always shows a mix, because the seed's waterings are moved to the current date.
+
 **Offline mode**
 
 1. Sign in as Ava. The banner says **Synced**.
@@ -101,6 +106,7 @@ The features are written in plain language (Gherkin) and run on Playwright:
 | `auth` | Signing in, a wrong password, signing out. |
 | `plants` | Adding and editing a plant; the form explains each invalid field next to the field. |
 | `offline-sync` | Changes made offline wait on the device ("Not synced yet", sign-out blocked) and reach the server when back online. |
+| `reminders` | Each reminder wording, marking a plant watered (also offline), with "today" fixed by Playwright's clock so dates never flake. |
 | `conflict` | Ava and Ben in two browsers: different fields are combined, equal values are no conflict, and only clashing fields are asked about, also after working offline or while typing. |
 | `map` | `wion map` finds every screen and form field of Sprout with a locator for each, changes no data, and explains a wrong password or an app that is not running. |
 
