@@ -8,7 +8,7 @@ You point Wion-Pilot at a web app, and it maps the screens. Then you build tests
 
 Milestones 0 and 1 of the [roadmap](PLAN.md) are done: the tooling (strict TypeScript, ESLint and Prettier, Vitest, Playwright with playwright-bdd, CI on GitHub Actions) and **Sprout**, the demo app that Wion-Pilot tests. Next is M2, the BDD test suite.
 
-Until the first Playwright features exist (M2), `npm test` passes when it finds no tests. That switch is removed with the first feature, so an empty run fails again.
+M2 is in progress: the first BDD feature (`tests/features/auth`) runs with `npm test`. It starts its own Sprout on port 4610 with its own data, so it never touches `npm run demo`.
 
 ## Sprout, the demo app
 
