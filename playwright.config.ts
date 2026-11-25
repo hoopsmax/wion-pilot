@@ -29,7 +29,8 @@ export default defineConfig({
     // Evidence for failures, kept only when a test fails (used by M3's bug-report drafts).
     trace: 'retain-on-failure',
     screenshot: 'only-on-failure',
-    video: 'retain-on-failure',
+    // A borrowed browser comes without the matching video recorder, so video is off there.
+    video: chromiumPath ? 'off' : 'retain-on-failure',
   },
   projects: [
     {
