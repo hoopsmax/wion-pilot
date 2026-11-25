@@ -5,6 +5,7 @@ import { Person } from '../pages/person.ts';
 import { attachIfFailed, recordBrowserLog } from './browser-log.ts';
 import { personNamed } from './people.ts';
 import { SproutApi, testPlantName } from './sprout-api.ts';
+import type { MapRun } from './wion-cli.ts';
 
 interface People {
   /** The person with this name, each in their own browser; opened on first use. */
@@ -15,6 +16,10 @@ interface People {
 export interface ScenarioState {
   /** A plant the scenario added through the form, with the light level it was given. */
   newPlant?: { name: string; light: string };
+  /** The last run of wion map. */
+  mapRun?: MapRun;
+  /** Sprout's own plants (not test data) before something happened. */
+  plantsBefore?: Plant[];
 }
 
 interface Fixtures {

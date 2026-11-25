@@ -165,6 +165,14 @@ Built in five small steps, each one approved first. The scope was narrowed to th
 
 **Done when:** mapping Sprout finds every screen and every form field.
 
+**Built (M4):**
+
+- `wion map <url>` (`packages/cli`) with `--max-pages`, `--max-depth`, `--allow-domain`, `--out` and `--config`. The crawler and the viewer are in `packages/core/src/map/`.
+- The sign-in comes from `wion.config.json`, with secrets from environment variables (`${SPROUT_PASSWORD}`). A wrong password is reported from the app's own alert, not after a timeout.
+- Each route pattern is mapped once; two routes that show the same screen are one card with "also at".
+- The `map` BDD feature checks every screen, field, locator and screenshot, and that no data changes. CI keeps the map as the `app-map` artifact.
+- Sprout's conflict screen has no link, so a crawler cannot reach it. The README says so, and the `conflict` feature covers it.
+
 ### M5: AI drafts with approval (1 day)
 
 - `wion draft "<what to test>"` sends the provider the app map and the shared step phrases. It does not send screenshots by default. The provider returns Gherkin scenarios that use only existing steps.

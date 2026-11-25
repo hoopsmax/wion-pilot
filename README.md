@@ -6,16 +6,17 @@ You point Wion-Pilot at a web app, and it maps the screens. Then you build tests
 
 ## Status
 
-Milestones 0 to 3 of the [roadmap](PLAN.md) are done:
+Milestones 0 to 4 of the [roadmap](PLAN.md) are done:
 
 - **M0:** the tooling (strict TypeScript, ESLint and Prettier, Vitest, Playwright with playwright-bdd, CI on GitHub Actions)
 - **M1:** **Sprout**, the demo app that Wion-Pilot tests
 - **M2:** a hand-written BDD suite that automates Sprout's hardest flows, run in CI on every push
 - **M3:** a bug-report draft for every failing test ([example](docs/example-bug-report.md))
+- **M4:** `wion map`, which maps an app's screens, form fields and locators
 
 The latest test report from `main` is published at **https://hoopsmax.github.io/wion-pilot/**.
 
-Next is M4: mapping an app's screens with `wion map`.
+Next is M5: AI drafts of new scenarios, which a person approves before they are added.
 
 ## Sprout, the demo app
 
@@ -54,6 +55,8 @@ Then close the terminal window, open a new one, and run the setup above.
 | --- | --- |
 | `npm run demo` | Build Sprout and start it at http://localhost:4600. |
 | `npm run demo:reset` | Restore Sprout's seed data. Works while the demo is running. |
+| `npm run map:sprout` | Map the running Sprout (signed in as Ava) into `.wion/map/`. See [Map an app](#map-an-app). |
+| `npm run wion -- map <url>` | Map any web app. `npm run wion -- --help` lists the options. |
 | `npm run demo:bug` | Run one scenario that fails on purpose and write its bug-report draft. npm reports a failure: that is the demo. |
 | `npm run check` | Lint (ESLint and Prettier), typecheck and unit tests. Run it before every commit. |
 | `npm run format` | Format all files with Prettier. |
@@ -99,6 +102,7 @@ The features are written in plain language (Gherkin) and run on Playwright:
 | `plants` | Adding and editing a plant; the form explains each invalid field next to the field. |
 | `offline-sync` | Changes made offline wait on the device ("Not synced yet", sign-out blocked) and reach the server when back online. |
 | `conflict` | Ava and Ben in two browsers: different fields are combined, equal values are no conflict, and only clashing fields are asked about, also after working offline or while typing. |
+| `map` | `wion map` finds every screen and form field of Sprout with a locator for each, changes no data, and explains a wrong password or an app that is not running. |
 
 Run them with `npm test`, then open the report with `npx playwright show-report`. The suite starts its own Sprout on port 4610 with its own data, so it never touches `npm run demo`.
 
@@ -129,6 +133,41 @@ A draft contains:
 Passing tests write nothing, and each run starts with an empty `reports/bugs/`. In CI the drafts of a failing run are attached as the `bug-report-drafts` artifact, and the "Bug-report demo" job checks on every push that `npm run demo:bug` still produces a complete draft.
 
 The reporter lives in `packages/core/src/report/`, the first part of Wion-Pilot itself.
+
+## Map an app
+
+`wion map` opens an app's pages and writes down what a tester needs: every screen, its form fields and a Playwright locator for every button, link and field. Try it on Sprout:
+
+```bash
+npm run demo
+```
+
+Then, in a second terminal:
+
+```bash
+npm run map:sprout
+open .wion/map/index.html
+```
+
+(On Linux, open the file in a browser instead of using `open`.) The run prints one line per screen and writes:
+
+- `.wion/map/app-map.json`: the map, for tools and later milestones
+- `.wion/map/index.html`: a viewer page, one card per screen
+- `.wion/map/screens/`: a full-page screenshot of each screen
+
+For each screen the map keeps the address and route pattern (`/plants/:id/edit`), the title and headings, the forms with each field's label, type and rules (required, min, max, options), the buttons, links and fields with a locator, and the `data-testid`s. An element without an accessible name gets no locator but a note: a screen reader user would miss it too.
+
+**How it crawls**
+
+- It signs in first, if `wion.config.json` says how: the fields by their label, the button by its name. Secrets stay out of the file: `${SPROUT_PASSWORD}` is read from the environment, and a missing variable stops the run with a message that names it. The sign-in screen itself is mapped before signing in.
+- It then opens pages breadth-first by their address, within `--max-pages` (default 30) and `--max-depth` (default 3), and only on the start URL's own site unless `--allow-domain` adds another.
+- It maps each route once: five "Edit" links are one screen, `/plants/:id/edit`. Two addresses that show exactly the same screen get one card that says "also at" (Sprout shows its plant list at `/` and `/plants`).
+- **It never clicks, types or submits** apart from signing in, and it never opens links that look destructive (delete, remove, sign out, pay). The "Links not followed" list says why each was skipped. Mapping Sprout changes no data; the `map` feature checks that.
+- Wrong use fails with a clear message: a wrong URL, an app that is not running ("Is the app running? For Sprout: npm run demo"), a missing password, or a sign-in error, quoted from the app's own alert.
+
+**Known limit:** a crawler only finds screens that a link leads to. Sprout's conflict screen appears only while a conflict is waiting and has no link of its own, so it is not on the map. The `conflict` feature tests it instead.
+
+In CI the "App map" job maps Sprout on every push and keeps the result as the `app-map` artifact. The code lives in `packages/core/src/map/` and the command in `packages/cli/`.
 
 ## How it's built
 

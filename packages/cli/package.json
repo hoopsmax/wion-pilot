@@ -1,0 +1,9 @@
+{
+  "name": "@wion-pilot/cli",
+  "private": true,
+  "description": "The wion command: wion map <url> maps a web app's screens, fields and locators.",
+  "type": "module",
+  "bin": {
+    "wion": "src/main.ts"
+  }
+}
