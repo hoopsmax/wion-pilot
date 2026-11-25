@@ -42,7 +42,7 @@ function screenHtml(screen: Screen): string {
   return `<section class="screen">
 <h2>${escapeHtml(title)} <small>${escapeHtml(screen.pattern)}</small></h2>
 <img src="${escapeHtml(screen.screenshot)}" alt="Screenshot of ${escapeHtml(title)}" loading="lazy">
-<p class="url">${escapeHtml(screen.url)}</p>
+<p class="url">${escapeHtml(screen.url)}${screen.alsoAt ? ` · also at ${escapeHtml(screen.alsoAt.join(', '))}` : ''}</p>
 ${screen.headings.length > 1 ? `<p>Headings: ${escapeHtml(screen.headings.join(' · '))}</p>` : ''}
 ${forms}
 <h4>Buttons, links and fields</h4><ul>${elements || '<li>None.</li>'}</ul>

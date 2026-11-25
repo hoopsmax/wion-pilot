@@ -9,6 +9,7 @@ const map: AppMap = {
     {
       pattern: '/plants/new',
       url: 'http://localhost:4600/plants/new',
+      alsoAt: ['/add'],
       title: 'Sprout',
       headings: ['Add plant'],
       forms: [
@@ -53,6 +54,7 @@ describe('buildViewer', () => {
   test('shows each screen with its route, screenshot, fields and locators', () => {
     expect(html).toContain('<h2>Add plant <small>/plants/new</small></h2>');
     expect(html).toContain('<img src="screens/plants-new.png" alt="Screenshot of Add plant"');
+    expect(html).toContain('http://localhost:4600/plants/new · also at /add</p>');
     expect(html).toContain(
       '<td>Watering interval (days)</td><td>number</td><td>min 1 · max 60</td>',
     );

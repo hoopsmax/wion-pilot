@@ -36,6 +36,8 @@ export interface Screen {
   pattern: string;
   /** The first URL that showed this screen. */
   url: string;
+  /** Other route patterns that show exactly the same screen, for example "/" and "/plants". */
+  alsoAt?: string[];
   title: string;
   headings: string[];
   forms: MappedForm[];
