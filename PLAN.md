@@ -126,12 +126,13 @@ Built in five small steps, each one approved first. The scope was narrowed to th
 
 - **Shared step library:** navigation, forms, tables and assertions, written once and reused everywhere.
 - **Page objects:** one per screen. Locators use roles, labels and test ids only.
-- **Features:**
+- **Features** (built in four approved steps):
   - `auth`
-  - `plants` (create, edit, delete, validation)
-  - `watering-log`
+  - `plants` (create, edit, validation). Delete waits until Sprout has a delete button.
   - `offline-sync`, which uses `context.setOffline()`
-  - `conflict`, which uses two browser contexts as two users
+  - `conflict`, which uses two browser contexts as two users, including the field-by-field merge, offline edits, a conflict while typing, and a background refresh (fast-forwarded with Playwright's clock instead of a fixed wait)
+  - `watering-log` waits until Sprout has the watering log (moved to later in M1).
+- **Guard rails:** a lint rule makes step files fail when they use raw locators instead of page objects.
 - **Test data:** each test creates its own data with a `wion-test-` prefix and cleans up after itself. Tests run in parallel.
 - **CI:** start Sprout, run the suite, and upload the HTML report. On `main`, publish the report to GitHub Pages.
 
