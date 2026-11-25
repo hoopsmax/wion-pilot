@@ -1,0 +1,5 @@
+# Docs are written by hand; Prettier would re-pad tables and rewrap lines.
+*.md
+
+# npm rewrites this file on every install, so formatting it would only fight npm.
+package-lock.json
