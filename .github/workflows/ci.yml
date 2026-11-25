@@ -50,3 +50,29 @@ jobs:
           name: playwright-report
           path: playwright-report/
           retention-days: 14
+      - name: Prepare the report for GitHub Pages
+        if: ${{ !cancelled() && github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+        uses: actions/upload-pages-artifact@v5
+        with:
+          path: playwright-report/
+
+  publish-report:
+    name: Publish the report
+    # Only main is published, and also after failing tests: the page always shows the latest run.
+    if: ${{ !cancelled() && github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+    needs: e2e
+    runs-on: ubuntu-latest
+    # The only job allowed to publish; every other job keeps read-only permissions.
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    concurrency:
+      group: pages
+      cancel-in-progress: false
+    steps:
+      - uses: actions/configure-pages@v6
+      - id: deployment
+        uses: actions/deploy-pages@v5
