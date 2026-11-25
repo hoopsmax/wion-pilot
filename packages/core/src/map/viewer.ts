@@ -1,4 +1,4 @@
-import type { AppMap, MappedElement, MappedForm, Screen } from './app-map.ts';
+import type { AppMap, MappedElement, MappedField, MappedForm, Screen } from './app-map.ts';
 
 /** Everything that goes into the page is escaped: the map holds text taken from a website. */
 function escapeHtml(text: string): string {
@@ -10,17 +10,24 @@ function escapeHtml(text: string): string {
     .replace(/'/g, '&#39;');
 }
 
+/** A field's rules in one line, for example "required · min 1 · max 60". */
+export function fieldRules(field: MappedField): string {
+  return [
+    field.required ? 'required' : '',
+    field.min === undefined ? '' : `min ${field.min}`,
+    field.max === undefined ? '' : `max ${field.max}`,
+    field.options ? `options: ${field.options.join(', ')}` : '',
+  ]
+    .filter((rule) => rule !== '')
+    .join(' · ');
+}
+
 function formHtml(form: MappedForm, index: number): string {
   const rows = form.fields
-    .map((field) => {
-      const rules = [
-        field.required ? 'required' : '',
-        field.min === undefined ? '' : `min ${field.min}`,
-        field.max === undefined ? '' : `max ${field.max}`,
-        field.options ? `options: ${field.options.join(', ')}` : '',
-      ].filter((rule) => rule !== '');
-      return `<tr><td>${escapeHtml(field.label)}</td><td>${escapeHtml(field.type)}</td><td>${escapeHtml(rules.join(' · '))}</td></tr>`;
-    })
+    .map(
+      (field) =>
+        `<tr><td>${escapeHtml(field.label)}</td><td>${escapeHtml(field.type)}</td><td>${escapeHtml(fieldRules(field))}</td></tr>`,
+    )
     .join('');
   return `<h4>Form ${String(index + 1)}</h4><table><tr><th>Field</th><th>Type</th><th>Rules</th></tr>${rows}</table>`;
 }
