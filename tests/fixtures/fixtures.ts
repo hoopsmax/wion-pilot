@@ -1,6 +1,8 @@
 import { createBdd, test as base } from 'playwright-bdd';
 import type { Plant } from '../../apps/sprout/src/shared/plant.ts';
+import type { BrowserLog } from '../../packages/core/src/report/bug-report-reporter.ts';
 import { Person } from '../pages/person.ts';
+import { attachIfFailed, recordBrowserLog } from './browser-log.ts';
 import { personNamed } from './people.ts';
 import { SproutApi, testPlantName } from './sprout-api.ts';
 
@@ -32,8 +34,10 @@ export const test = base.extend<Fixtures>({
     await use({});
   },
 
-  people: async ({ page, browser, baseURL }, use) => {
+  people: async ({ page, browser, baseURL }, use, testInfo) => {
     const opened = new Map<string, Person>();
+    // Console errors and failed requests of everyone in the test, for its bug-report draft.
+    const log: BrowserLog = { consoleErrors: [], failedRequests: [] };
     const extraContexts: { close(): Promise<void> }[] = [];
     await use({
       async as(name) {
@@ -48,11 +52,13 @@ export const test = base.extend<Fixtures>({
           extraContexts.push(context);
           personPage = await context.newPage();
         }
+        recordBrowserLog(personPage, known, log);
         const person = new Person(known, personPage);
         opened.set(known, person);
         return person;
       },
     });
+    await attachIfFailed(testInfo, log);
     await Promise.all(extraContexts.map((context) => context.close()));
   },
 
