@@ -1,6 +1,7 @@
 import { expect } from '@playwright/test';
 import { Given, Then, When } from '../fixtures/fixtures.ts';
-import { TEST_PREFIX } from '../fixtures/sprout-api.ts';
+import type { ScenarioState } from '../fixtures/fixtures.ts';
+import { TEST_PREFIX, testPlantName } from '../fixtures/sprout-api.ts';
 
 Given('a test plant exists', ({ testPlant }) => {
   // Asking for the fixture creates the plant; the check makes sure it is test data.
@@ -136,3 +137,36 @@ Then(
       .toBe(labelled(testPlant.name, label));
   },
 );
+
+function rememberedNewPlant(scenario: ScenarioState): { name: string; light: string } {
+  if (scenario.newPlant === undefined) {
+    throw new Error('No new plant in this scenario yet: use "… adds a new plant …" first.');
+  }
+  return scenario.newPlant;
+}
+
+When(
+  '{word} adds a new plant with light {string}, watered every {int} days',
+  async ({ people, scenario, createdPlantNames }, name: string, light: string, days: number) => {
+    const person = await people.as(name);
+    const plantName = testPlantName();
+    createdPlantNames.push(plantName);
+    scenario.newPlant = { name: plantName, light };
+    await person.plantList.addPlant.click();
+    await person.form.fill({ name: plantName, light, interval: days });
+    await person.form.saveAndReturnToList();
+  },
+);
+
+Then(
+  "{word}'s list shows the new plant as {string}",
+  async ({ people, scenario }, name: string, details: string) => {
+    const person = await people.as(name);
+    await person.plantList.expectPlant(rememberedNewPlant(scenario).name, details);
+  },
+);
+
+Then('the new plant is saved on the server', async ({ api, scenario }) => {
+  const { name, light } = rememberedNewPlant(scenario);
+  await expect.poll(async () => (await api.plantNamed(name))?.light).toBe(lightValue(light));
+});

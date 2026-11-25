@@ -11,7 +11,8 @@ interface People {
 
 /** What one scenario remembers between its steps. Fresh for every test, never shared. */
 export interface ScenarioState {
-  newPlantName?: string;
+  /** A plant the scenario added through the form, with the light level it was given. */
+  newPlant?: { name: string; light: string };
 }
 
 interface Fixtures {
