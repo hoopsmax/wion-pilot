@@ -1,0 +1,24 @@
+{
+  "name": "wion-pilot",
+  "private": true,
+  "description": "AI-assisted test automation platform for web apps, built with TypeScript and Playwright.",
+  "license": "MIT",
+  "type": "module",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "engines": {
+    "node": ">=26"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test:unit": "vitest run",
+    "check": "npm run typecheck && npm run test:unit"
+  },
+  "devDependencies": {
+    "@types/node": "26.6.7",
+    "typescript": "6.0.3",
+    "vitest": "5.1.1"
+  }
+}
