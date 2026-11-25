@@ -32,6 +32,7 @@ describe('changeFor', () => {
       kind: 'update',
       plantId: 'fern',
       baseVersion: 3,
+      baseFields: fields('Window fern'),
       fields: fields('Big fern'),
     });
   });
@@ -48,8 +49,20 @@ describe('changeFor', () => {
 
 describe('enqueue', () => {
   test('two edits of one plant become one change that keeps the first base version', () => {
-    const first: Change = { kind: 'update', plantId: 'fern', baseVersion: 3, fields: fields('A') };
-    const second: Change = { kind: 'update', plantId: 'fern', baseVersion: 4, fields: fields('B') };
+    const first: Change = {
+      kind: 'update',
+      plantId: 'fern',
+      baseVersion: 3,
+      baseFields: fields('Window fern'),
+      fields: fields('A'),
+    };
+    const second: Change = {
+      kind: 'update',
+      plantId: 'fern',
+      baseVersion: 4,
+      baseFields: fields('Window fern'),
+      fields: fields('B'),
+    };
     expect(enqueue(enqueue([], first), second)).toEqual([{ ...first, fields: fields('B') }]);
   });
 
@@ -67,7 +80,13 @@ describe('enqueue', () => {
 });
 
 describe('afterSent', () => {
-  const sent: Change = { kind: 'update', plantId: 'fern', baseVersion: 3, fields: fields('A') };
+  const sent: Change = {
+    kind: 'update',
+    plantId: 'fern',
+    baseVersion: 3,
+    baseFields: fields('Window fern'),
+    fields: fields('A'),
+  };
   const saved: Plant = { ...fern, ...fields('A'), version: 4 };
 
   test('removes the change that was sent', () => {
@@ -77,7 +96,13 @@ describe('afterSent', () => {
   test('keeps a newer save made while sending, now based on the new version', () => {
     const newer: Change = { ...sent, fields: fields('B') };
     expect(afterSent([newer], sent, saved)).toEqual([
-      { kind: 'update', plantId: 'fern', baseVersion: 4, fields: fields('B') },
+      {
+        kind: 'update',
+        plantId: 'fern',
+        baseVersion: 4,
+        baseFields: fields('A'),
+        fields: fields('B'),
+      },
     ]);
   });
 });
@@ -85,7 +110,13 @@ describe('afterSent', () => {
 describe('shownPlants', () => {
   test('shows waiting changes on top of the server copy, marked as not synced', () => {
     const outbox: Change[] = [
-      { kind: 'update', plantId: 'fern', baseVersion: 3, fields: fields('Big fern') },
+      {
+        kind: 'update',
+        plantId: 'fern',
+        baseVersion: 3,
+        baseFields: fields('Window fern'),
+        fields: fields('Big fern'),
+      },
       { kind: 'create', plantId: 'basil', fields: fields('Basil') },
     ];
     expect(shownPlants([fern], outbox)).toEqual([

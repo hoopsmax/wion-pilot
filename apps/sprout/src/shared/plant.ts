@@ -69,3 +69,14 @@ export function validatePlantFields(input: Record<string, unknown>): Validation 
     fields: { name: name.trim(), light, wateringIntervalDays: wateringIntervalDays as number },
   };
 }
+
+/** Just the editable fields of a plant, without id and version. */
+export function fieldsOf(plant: PlantFields): PlantFields {
+  return { name: plant.name, light: plant.light, wateringIntervalDays: plant.wateringIntervalDays };
+}
+
+export function sameFields(a: PlantFields, b: PlantFields): boolean {
+  return (
+    a.name === b.name && a.light === b.light && a.wateringIntervalDays === b.wateringIntervalDays
+  );
+}

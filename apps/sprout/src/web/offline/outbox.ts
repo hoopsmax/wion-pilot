@@ -1,9 +1,16 @@
-import type { Plant, PlantFields } from '../../shared/plant.ts';
+import { fieldsOf, sameFields, type Plant, type PlantFields } from '../../shared/plant.ts';
 
 /** A change the user made that the server does not know about yet. */
 export type Change =
   | { kind: 'create'; plantId: string; fields: PlantFields }
-  | { kind: 'update'; plantId: string; baseVersion: number; fields: PlantFields };
+  | {
+      kind: 'update';
+      plantId: string;
+      baseVersion: number;
+      /** The fields at baseVersion: with them a conflict can tell who changed which field. */
+      baseFields: PlantFields;
+      fields: PlantFields;
+    };
 
 /** A change the server refused because someone else saved the plant first. */
 export interface Conflict {
@@ -30,7 +37,15 @@ export function changeFor(
 ): Change {
   if (plantId === undefined) return { kind: 'create', plantId: newId(), fields };
   const known = serverPlants.find((plant) => plant.id === plantId);
-  if (known) return { kind: 'update', plantId, baseVersion: known.version, fields };
+  if (known) {
+    return {
+      kind: 'update',
+      plantId,
+      baseVersion: known.version,
+      baseFields: fieldsOf(known),
+      fields,
+    };
+  }
   if (outbox.some((change) => change.plantId === plantId && change.kind === 'create')) {
     return { kind: 'create', plantId, fields };
   }
@@ -50,12 +65,6 @@ export function enqueue(outbox: readonly Change[], change: Change): Change[] {
   return outbox.map((existing, i) => (i === index ? merged : existing));
 }
 
-function sameFields(a: PlantFields, b: PlantFields): boolean {
-  return (
-    a.name === b.name && a.light === b.light && a.wateringIntervalDays === b.wateringIntervalDays
-  );
-}
-
 /**
  * Updates the outbox after `sent` reached the server. If the user saved the plant again while
  * the request was on its way, that newer change stays, now based on the server's new version.
@@ -69,6 +78,7 @@ export function afterSent(outbox: readonly Change[], sent: Change, saved: Plant)
         kind: 'update',
         plantId: change.plantId,
         baseVersion: saved.version,
+        baseFields: fieldsOf(saved),
         fields: change.fields,
       },
     ];
@@ -90,16 +100,7 @@ export function shownPlants(
   outbox: readonly Change[],
 ): ShownPlant[] {
   const shown = new Map<string, ShownPlant>(
-    serverPlants.map((plant) => [
-      plant.id,
-      {
-        id: plant.id,
-        name: plant.name,
-        light: plant.light,
-        wateringIntervalDays: plant.wateringIntervalDays,
-        synced: true,
-      },
-    ]),
+    serverPlants.map((plant) => [plant.id, { id: plant.id, ...fieldsOf(plant), synced: true }]),
   );
   for (const change of outbox) {
     shown.set(change.plantId, { id: change.plantId, ...change.fields, synced: false });

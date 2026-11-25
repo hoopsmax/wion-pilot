@@ -51,6 +51,7 @@ const fernEdit: Change = {
   kind: 'update',
   plantId: 'fern',
   baseVersion: 1,
+  baseFields: fields('Window fern'),
   fields: fields('Big fern'),
 };
 
@@ -131,7 +132,7 @@ describe('syncOnce', () => {
     };
 
     await syncOnce(store, transport);
-    expect(sent).toEqual([fernEdit, { ...newer, baseVersion: 2 }]);
+    expect(sent).toEqual([fernEdit, { ...newer, baseVersion: 2, baseFields: fields('Big fern') }]);
     expect((await store.load()).outbox).toEqual([]);
   });
 });
