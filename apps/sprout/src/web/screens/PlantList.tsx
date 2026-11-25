@@ -9,16 +9,29 @@ interface PlantListProps {
 }
 
 export function PlantList({ session, onSignOut }: PlantListProps) {
-  const { ready, plants } = useSproutData();
+  const { ready, plants, waiting, conflicts } = useSproutData();
+  // Signing out would leave unsent changes behind, so it waits until nothing is pending.
+  const unsent = waiting + conflicts.length;
 
   return (
     <main className="page">
       <div className="topbar">
         <h1>Plants</h1>
-        <button type="button" className="secondary" onClick={onSignOut}>
+        <button
+          type="button"
+          className="secondary"
+          onClick={onSignOut}
+          disabled={unsent > 0}
+          aria-describedby={unsent > 0 ? 'sign-out-hint' : undefined}
+        >
           Sign out
         </button>
       </div>
+      {unsent > 0 && (
+        <p id="sign-out-hint" className="muted">
+          You can sign out once all your changes are synced.
+        </p>
+      )}
       <p className="muted">Signed in as {session.user.name}.</p>
       <p>
         <Link className="button" href="/plants/new">
