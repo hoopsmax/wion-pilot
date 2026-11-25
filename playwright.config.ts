@@ -17,8 +17,12 @@ const dataFile = join(import.meta.dirname, '.wion', 'e2e', 'sprout-db.json');
 // (such as a cloud sandbox). Unset on a laptop and in CI, where `npx playwright install` is used.
 const chromiumPath = process.env['PW_CHROMIUM_PATH'];
 
+// The @demo-bug scenario fails on purpose; it runs only through `npm run demo:bug`.
+const demoBug = process.env['WION_DEMO_BUG'] === '1';
+
 export default defineConfig({
   testDir,
+  ...(demoBug ? {} : { grepInvert: /@demo-bug/ }),
   fullyParallel: true,
   forbidOnly: Boolean(process.env['CI']),
   // No retries: a flaky test must fail visibly, not pass on a second try.

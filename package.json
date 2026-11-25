@@ -19,7 +19,8 @@
     "check": "npm run lint && npm run typecheck && npm run test:unit",
     "test": "bddgen && playwright test",
     "demo": "npm run demo -w @wion-pilot/sprout",
-    "demo:reset": "npm run reset -w @wion-pilot/sprout"
+    "demo:reset": "npm run reset -w @wion-pilot/sprout",
+    "demo:bug": "WION_DEMO_BUG=1 npm test -- --grep @demo-bug"
   },
   "devDependencies": {
     "@eslint/js": "10.0.1",
