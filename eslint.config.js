@@ -23,6 +23,14 @@ const testRuleGuards = [
   },
 ];
 
+// Steps describe behaviour and call page objects; only page objects know how to find elements.
+const rawLocatorInStep = {
+  selector:
+    'CallExpression[callee.property.name=/^(locator|frameLocator|getBy(Role|Label|Text|TestId|Placeholder|Title|AltText))$/]',
+  message:
+    'Steps call page objects, never raw locators (CLAUDE.md). Add the element to a page object in tests/pages/.',
+};
+
 export default defineConfig(
   globalIgnores([
     '.features-gen/',
@@ -46,6 +54,10 @@ export default defineConfig(
       'max-lines': ['error', { max: 300, skipBlankLines: true, skipComments: true }],
       'no-restricted-syntax': ['error', ...testRuleGuards],
     },
+  },
+  {
+    files: ['tests/steps/**/*.ts', 'tests/features/**/*.steps.ts'],
+    rules: { 'no-restricted-syntax': ['error', ...testRuleGuards, rawLocatorInStep] },
   },
   {
     // JavaScript files (like this one) are not part of the TypeScript program.

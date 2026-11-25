@@ -1,9 +1,8 @@
-import { copyFile } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { createApp } from './app.ts';
 import { createSessions } from './sessions.ts';
-import { createStore } from './store.ts';
+import { copySeed, createStore } from './store.ts';
 
 const appFolder = resolve(import.meta.dirname, '../..');
 const seedFile = join(appFolder, 'data/seed.json');
@@ -22,7 +21,7 @@ if (!existsSync(join(webFolder, 'index.html'))) {
 
 // The first run starts from the seed data; later runs keep what people changed.
 if (!existsSync(dataFile)) {
-  await copyFile(seedFile, dataFile);
+  await copySeed(seedFile, dataFile);
 }
 
 const app = createApp({

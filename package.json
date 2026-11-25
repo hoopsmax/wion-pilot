@@ -17,7 +17,7 @@
     "typecheck": "tsc --noEmit && npm run typecheck --workspaces --if-present",
     "test:unit": "vitest run",
     "check": "npm run lint && npm run typecheck && npm run test:unit",
-    "test": "bddgen && playwright test --pass-with-no-tests",
+    "test": "bddgen && playwright test",
     "demo": "npm run demo -w @wion-pilot/sprout",
     "demo:reset": "npm run reset -w @wion-pilot/sprout"
   },

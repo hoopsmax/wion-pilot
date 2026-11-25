@@ -1,4 +1,5 @@
-import { readFile, rename, writeFile } from 'node:fs/promises';
+import { mkdir, readFile, rename, writeFile } from 'node:fs/promises';
+import { dirname } from 'node:path';
 
 export async function readJsonFile(path: string): Promise<unknown> {
   const text = await readFile(path, 'utf8');
@@ -16,6 +17,7 @@ export async function readJsonFile(path: string): Promise<unknown> {
  * A rename is atomic, so a reader never sees a half-written file.
  */
 export async function writeJsonFileAtomic(path: string, data: unknown): Promise<void> {
+  await mkdir(dirname(path), { recursive: true });
   const temporaryPath = `${path}.${String(process.pid)}.tmp`;
   await writeFile(temporaryPath, JSON.stringify(data, null, 2) + '\n', 'utf8');
   await rename(temporaryPath, path);

@@ -20,6 +20,11 @@ export type UpdateResult =
 
 export type Store = ReturnType<typeof createStore>;
 
+/** Writes the made-up seed data to the data file; used on a first run and by npm run demo:reset. */
+export async function copySeed(seedFile: string, dataFile: string): Promise<void> {
+  await writeJsonFileAtomic(dataFile, await readSproutData(seedFile));
+}
+
 function isSproutData(value: unknown): value is SproutData {
   return (
     typeof value === 'object' &&

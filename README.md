@@ -6,9 +6,15 @@ You point Wion-Pilot at a web app, and it maps the screens. Then you build tests
 
 ## Status
 
-Milestones 0 and 1 of the [roadmap](PLAN.md) are done: the tooling (strict TypeScript, ESLint and Prettier, Vitest, Playwright with playwright-bdd, CI on GitHub Actions) and **Sprout**, the demo app that Wion-Pilot tests. Next is M2, the BDD test suite.
+Milestones 0 to 2 of the [roadmap](PLAN.md) are done:
 
-Until the first Playwright features exist (M2), `npm test` passes when it finds no tests. That switch is removed with the first feature, so an empty run fails again.
+- **M0:** the tooling (strict TypeScript, ESLint and Prettier, Vitest, Playwright with playwright-bdd, CI on GitHub Actions)
+- **M1:** **Sprout**, the demo app that Wion-Pilot tests
+- **M2:** a hand-written BDD suite that automates Sprout's hardest flows, run in CI on every push
+
+The latest test report from `main` is published at **https://hoopsmax.github.io/wion-pilot/**.
+
+Next is M3: bug-report drafts from failing tests.
 
 ## Sprout, the demo app
 
@@ -80,6 +86,30 @@ Reloading the page while offline is not supported yet (that needs a service work
 4. Ava sees the conflict screen with only the **Name** field. If they had changed different fields, both changes would simply be kept.
 
 `npm run demo:reset` brings the seed data back at any time.
+
+## The BDD test suite
+
+The features are written in plain language (Gherkin) and run on Playwright:
+
+| Feature | What it checks |
+| --- | --- |
+| `auth` | Signing in, a wrong password, signing out. |
+| `plants` | Adding and editing a plant; the form explains each invalid field next to the field. |
+| `offline-sync` | Changes made offline wait on the device ("Not synced yet", sign-out blocked) and reach the server when back online. |
+| `conflict` | Ava and Ben in two browsers: different fields are combined, equal values are no conflict, and only clashing fields are asked about, also after working offline or while typing. |
+
+Run them with `npm test`, then open the report with `npx playwright show-report`. The suite starts its own Sprout on port 4610 with its own data, so it never touches `npm run demo`.
+
+How the tests are written (the rules are in [CLAUDE.md](CLAUDE.md)):
+
+- **One folder per feature** in `tests/features/`, with its `.feature` file and its steps. Steps that several features use live in `tests/steps/`.
+- **Steps talk to page objects** (`tests/pages/`), never to raw locators. A lint rule enforces this.
+- **Locators by role, label, text or test id.** No XPath (also enforced by lint).
+- **No fixed waits.** Every step waits for something its action caused, such as the form closing and then the banner saying "Synced".
+- **Own test data:** each test creates plants named `wion-test-…` and deletes them afterwards, so tests run in parallel and in any order.
+- **Failure evidence:** a failing test keeps a screenshot, a video and a trace. In CI the HTML report is attached to every run as the `playwright-report` artifact.
+
+`PW_CHROMIUM_PATH` is only for sandboxes whose pre-installed browser belongs to another Playwright version; leave it unset on your machine.
 
 ## How it's built
 
