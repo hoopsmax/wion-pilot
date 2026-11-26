@@ -1,5 +1,6 @@
 import { expect, type BrowserContext, type Page } from '@playwright/test';
 import { CREDENTIALS, type PersonName } from '../fixtures/people.ts';
+import { AnyScreen } from './any-screen.ts';
 import { ConflictPage } from './conflict-page.ts';
 import { PlantFormPage } from './plant-form-page.ts';
 import { PlantListPage } from './plant-list-page.ts';
@@ -19,6 +20,8 @@ export class Person {
   readonly form: PlantFormPage;
   readonly conflict: ConflictPage;
   readonly banner: SyncBanner;
+  /** Whatever screen is open, for the generic steps (clicks, fills, chooses, sees). */
+  readonly screen: AnyScreen;
   #offline = false;
 
   constructor(name: PersonName, page: Page) {
@@ -30,6 +33,7 @@ export class Person {
     this.form = new PlantFormPage(page);
     this.conflict = new ConflictPage(page);
     this.banner = new SyncBanner(page);
+    this.screen = new AnyScreen(page);
   }
 
   async signIn(password: string = CREDENTIALS[this.name].password): Promise<void> {
@@ -62,6 +66,15 @@ export class Person {
   async expectAllSynced(): Promise<void> {
     await this.banner.expectStatus('Synced');
     await expect(this.plantList.anyNotSynced).toHaveCount(0);
+  }
+
+  /**
+   * Waits until this browser has sent every change it holds: the banner no longer says Syncing.
+   * Offline, nothing can be sent, so there is nothing to wait for.
+   */
+  async waitUntilChangesSent(): Promise<void> {
+    if (this.#offline) return;
+    await expect(this.banner.status('Syncing')).toBeHidden();
   }
 
   async goOffline(): Promise<void> {

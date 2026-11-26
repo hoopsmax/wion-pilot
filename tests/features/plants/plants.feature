@@ -10,6 +10,14 @@ Feature: Adding and editing plants
     Then Ava's list shows the new plant as "Direct sun · Water every 3 days"
     And the new plant is saved on the server
 
+  Scenario: Adding a plant step by step
+    When Ava clicks "Add plant"
+    And Ava fills "Name" with "{new name}"
+    And Ava chooses "Medium light" in "Light"
+    And Ava fills "Watering interval (days)" with "5"
+    And Ava clicks "Save"
+    Then Ava sees "{new name}"
+
   Scenario: Editing a plant
     Given a test plant exists
     When Ava starts editing the test plant
