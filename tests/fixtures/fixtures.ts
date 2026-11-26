@@ -2,6 +2,7 @@ import { createBdd, test as base } from 'playwright-bdd';
 import type { Plant } from '../../apps/sprout/src/shared/plant.ts';
 import { dayOf } from '../../apps/sprout/src/shared/watering.ts';
 import type { BrowserLog } from '../../packages/core/src/report/bug-report-reporter.ts';
+import type { Recording } from '../../packages/core/src/teach/recorder.ts';
 import { Person } from '../pages/person.ts';
 import { attachIfFailed, recordBrowserLog } from './browser-log.ts';
 import { personNamed } from './people.ts';
@@ -17,6 +18,8 @@ interface People {
 
 /** What one scenario remembers between its steps. Fresh for every test, never shared. */
 export interface ScenarioState {
+  /** What wion teach is recording in this scenario, and for whom. */
+  recording?: { person: string; recording: Recording };
   /** The fresh test name that "{new name}" stands for in this scenario's steps. */
   newName?: string;
   /** A plant the scenario added through the form, with the light level it was given. */

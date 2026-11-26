@@ -37,6 +37,14 @@ export class AnyScreen {
     await this.field(label).selectOption({ label: option });
   }
 
+  /** Option/Alt+click on a text. While wion teach records, that marks the text as a check. */
+  async pointOut(text: string): Promise<void> {
+    await this.#page
+      .getByText(text, { exact: true })
+      .first()
+      .click({ modifiers: ['Alt'] });
+  }
+
   /** The text is shown somewhere on the screen, exactly as written. */
   async expectText(text: string): Promise<void> {
     await expect(this.#page.getByText(text, { exact: true }).first()).toBeVisible();
