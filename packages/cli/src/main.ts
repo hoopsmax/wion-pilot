@@ -1,7 +1,9 @@
 #!/usr/bin/env node
 import { parseCliArgs, USAGE, UsageError } from './args.ts';
 import { CRAWL_DEFAULTS } from '../../core/src/map/crawler.ts';
+import { runDraft } from './draft-command.ts';
 import { runMap } from './map-command.ts';
+import { runReviewInTerminal } from './review-command.ts';
 
 /** The first line of each cause, so a failure says what went wrong underneath without a stack. */
 function causes(error: unknown): string[] {
@@ -19,10 +21,22 @@ async function main(argv: string[]): Promise<number> {
       console.log(USAGE);
       return 0;
     }
-    await runMap(args, process.env, (line) => {
+    const log = (line: string) => {
       console.log(line);
-    });
-    return 0;
+    };
+    if (args.command === 'map') {
+      await runMap(args, process.env, log);
+      return 0;
+    }
+    if (args.command === 'draft') {
+      return await runDraft(args, {
+        root: process.cwd(),
+        env: process.env,
+        now: () => new Date(),
+        log,
+      });
+    }
+    return await runReviewInTerminal(args, { root: process.cwd(), now: () => new Date(), log });
   } catch (error) {
     if (error instanceof UsageError) {
       console.error(`wion: ${error.message}\n\n${USAGE}`);
