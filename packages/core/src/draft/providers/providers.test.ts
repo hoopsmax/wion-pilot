@@ -161,3 +161,14 @@ describe('recorded and none', () => {
     }
   });
 });
+
+describe('claude key problems', () => {
+  test('an organization-wide key is explained with how to get a workspace key', async () => {
+    const unscoped = Object.assign(Object.create(Anthropic.BadRequestError.prototype) as Error, {
+      message: '400 This API key is not scoped to a workspace … anthropic-workspace-id header …',
+    });
+    await expect(
+      claudeProvider({ client: fakeClaude({}, unscoped).client }).draft(prompt),
+    ).rejects.toThrow(/not to a workspace.*Create key → choose a workspace/);
+  });
+});

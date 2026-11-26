@@ -40,6 +40,17 @@ function explain(error: unknown): Error {
   if (error instanceof Anthropic.APIConnectionError) {
     return new Error('Cannot reach api.anthropic.com. Check the network.', { cause: error });
   }
+  // The API has no own error type for this; its message names the missing header.
+  if (
+    error instanceof Anthropic.BadRequestError &&
+    error.message.includes('anthropic-workspace-id')
+  ) {
+    return new Error(
+      'This API key belongs to the whole organization, not to a workspace. Create one that does: ' +
+        'Claude Console → API keys → Create key → choose a workspace (for example Default).',
+      { cause: error },
+    );
+  }
   if (error instanceof Anthropic.APIError) {
     return new Error(`The Claude API answered ${String(error.status)}: ${error.message}`, {
       cause: error,
