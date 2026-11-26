@@ -4,6 +4,7 @@ import { CRAWL_DEFAULTS } from '../../core/src/map/crawler.ts';
 import { runDraft } from './draft-command.ts';
 import { runMap } from './map-command.ts';
 import { runReviewInTerminal } from './review-command.ts';
+import { runTeach } from './teach-command.ts';
 
 /** The first line of each cause, so a failure says what went wrong underneath without a stack. */
 function causes(error: unknown): string[] {
@@ -30,6 +31,14 @@ async function main(argv: string[]): Promise<number> {
     }
     if (args.command === 'draft') {
       return await runDraft(args, {
+        root: process.cwd(),
+        env: process.env,
+        now: () => new Date(),
+        log,
+      });
+    }
+    if (args.command === 'teach') {
+      return await runTeach(args, {
         root: process.cwd(),
         env: process.env,
         now: () => new Date(),

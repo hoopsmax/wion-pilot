@@ -4,11 +4,9 @@ Feature: Teaching wion by clicking
   a click, typing, a choice, or an Option+click on a text to check that it is shown. Here
   Playwright plays Ava, so the recorder is tested on every push.
 
-  Background:
+  Scenario: Adding a plant becomes steps, with the typed test name as {new name}
     Given Ava is signed in
     And wion is recording what Ava does
-
-  Scenario: Adding a plant becomes steps, with the typed test name as {new name}
     When Ava adds a new plant with light "Medium light", watered every 5 days
     And Ava points out the new plant's name
     Then the recording reads:
@@ -23,6 +21,8 @@ Feature: Teaching wion by clicking
     And the recorded steps pass the check
 
   Scenario: The test name is replaced inside a link's name too
+    Given Ava is signed in
+    And wion is recording what Ava does
     When Ava adds a new plant with light "Low light", watered every 3 days
     And Ava opens the new plant for editing
     Then the recording ends with:
@@ -31,7 +31,14 @@ Feature: Teaching wion by clicking
       """
 
   Scenario: A password is never recorded
+    Given Ava is signed in
+    And wion is recording what Ava does
     When Ava signs out
     And Ava signs in with the password "not-her-password"
     Then the recording does not contain "not-her-password"
     And the recording notes that the password was not recorded
+
+  Scenario: The wion teach command signs in, starts recording and explains an empty recording
+    When wion teach is started and finished at once, without a window
+    Then wion teach says it signed in and started recording
+    And wion teach explains that nothing was recorded
