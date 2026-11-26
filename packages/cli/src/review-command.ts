@@ -24,6 +24,16 @@ function shownPath(root: string, path: string): string {
 
 const CHOICES: Record<string, Answer> = { y: 'yes', n: 'no', s: 'skip', q: 'quit' };
 
+/** Only the first letter counts, so "y", "Y", "yes" and "[y]" all mean yes. */
+export function readAnswer(reply: string): Answer | 'empty' | 'unknown' {
+  const letter = reply
+    .toLowerCase()
+    .replace(/[^a-z]/g, '')
+    .slice(0, 1);
+  if (letter === '') return 'empty';
+  return CHOICES[letter] ?? 'unknown';
+}
+
 async function askFor(scenario: DraftScenario, io: ReviewIo): Promise<Answer> {
   io.log('');
   io.log(`  Scenario: ${scenario.name}`);
@@ -32,8 +42,10 @@ async function askFor(scenario: DraftScenario, io: ReviewIo): Promise<Answer> {
     const reply = await io.ask('Approve? [y]es, [n]o, [s]kip this proposal, [q]uit: ');
     // The input ended (Ctrl+D, or a pipe ran dry): stop without deciding anything more.
     if (reply === undefined) return 'quit';
-    const answer = CHOICES[reply.trim().toLowerCase().slice(0, 1)];
-    if (answer) return answer;
+    const answer = readAnswer(reply);
+    // An empty line (an extra Enter) simply asks again.
+    if (answer === 'empty') continue;
+    if (answer !== 'unknown') return answer;
     io.log('Please answer y, n, s or q.');
   }
 }
@@ -107,7 +119,8 @@ export async function runReviewInTerminal(
   args: ReviewArgs,
   io: Omit<ReviewIo, 'ask'>,
 ): Promise<number> {
-  const lines = createInterface({ input: process.stdin, terminal: false })[Symbol.asyncIterator]();
+  const input = createInterface({ input: process.stdin, terminal: false });
+  const lines = input[Symbol.asyncIterator]();
   try {
     return await runReview(args, {
       ...io,
@@ -118,6 +131,8 @@ export async function runReviewInTerminal(
       },
     });
   } finally {
-    await lines.return?.();
+    // Stopping the line reader is not enough: the interface keeps reading the terminal, and wion
+    // would never return to the shell. Closing it releases the input.
+    input.close();
   }
 }
