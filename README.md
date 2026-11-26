@@ -6,17 +6,18 @@ You point Wion-Pilot at a web app, and it maps the screens. Then you build tests
 
 ## Status
 
-Milestones 0 to 4 of the [roadmap](PLAN.md) are done:
+Milestones 0 to 5 of the [roadmap](PLAN.md) are done:
 
 - **M0:** the tooling (strict TypeScript, ESLint and Prettier, Vitest, Playwright with playwright-bdd, CI on GitHub Actions)
 - **M1:** **Sprout**, the demo app that Wion-Pilot tests
 - **M2:** a hand-written BDD suite that automates Sprout's hardest flows, run in CI on every push
 - **M3:** a bug-report draft for every failing test ([example](docs/example-bug-report.md))
 - **M4:** `wion map`, which maps an app's screens, form fields and locators
+- **M5:** `wion draft` and `wion review`: an AI drafts BDD scenarios from a topic or a code change, and a person approves each one
 
 The latest test report from `main` is published at **https://hoopsmax.github.io/wion-pilot/**.
 
-Next is M5: AI drafts of new scenarios, which a person approves before they are added.
+Next is M6: teach mode, which turns clicks in the app into Gherkin steps.
 
 ## Sprout, the demo app
 
@@ -109,6 +110,7 @@ The features are written in plain language (Gherkin) and run on Playwright:
 | `plants` | Adding and editing a plant; the form explains each invalid field next to the field. |
 | `offline-sync` | Changes made offline wait on the device ("Not synced yet", sign-out blocked) and reach the server when back online. |
 | `reminders` | Each reminder wording, marking a plant watered (also offline), with "today" fixed by Playwright's clock so dates never flake. |
+| `watering-reminders` | Five scenarios drafted by Claude with `wion draft --diff main` and approved with `wion review` (two people watering, editing keeps the day, a new plant, sign-out blocked). Two needed a missing step added by hand; the file says which. |
 | `conflict` | Ava and Ben in two browsers: different fields are combined, equal values are no conflict, and only clashing fields are asked about, also after working offline or while typing. |
 | `draft` | `wion draft` and `wion review` on saved answers: a good answer becomes a proposal, a made-up step is refused, only approved scenarios are written, and the prompt has personal data removed. |
 | `map` | `wion map` finds every screen and form field of Sprout with a locator for each, changes no data, and explains a wrong password or an app that is not running. |
@@ -189,7 +191,7 @@ npm run wion -- draft "watering reminders" --diff main --provider claude  # both
 npm run wion -- review
 ```
 
-**What the AI gets:** the topic and/or the app's code change (`git diff`, files under `apps/` only), a short summary of the app map (screens, fields, buttons; no screenshots; run `npm run map:sprout` first for better drafts), the list of shared steps from `tests/steps/`, and one feature as a style example. With a code change it also explains in plain words what changed and writes a test plan.
+**What the AI gets:** the topic and/or the app's code change (`git diff`, files under `apps/` only), a short summary of the app map (screens, fields, buttons; no screenshots; run `npm run map:sprout` first for better drafts), the list of shared steps from `tests/steps/`, and the hand-written features as examples of how steps go together (which ones must come first). AI drafts are never shown as examples, nor features tagged `@not-an-example` (the demo bug, and the features that test wion itself). With a code change it also explains in plain words what changed and writes a test plan.
 
 **Before anything is sent**, the prompt is redacted: email addresses, the values of environment variables named like `PASSWORD`, `TOKEN`, `KEY` or `SECRET`, and long key- or hash-like strings become `<email>` / `<secret>`. The command says how many it removed.
 
@@ -199,13 +201,15 @@ npm run wion -- review
 | --- | --- |
 | `none` (default) | No AI call. Saves the prompt in `.wion/prompts/` to paste into any chat; bring the answer back with `--answer <file>`. |
 | `ollama` | A local model through Ollama (`--model`, default `llama3.1`). Free; nothing leaves the computer. |
-| `claude` | Opt-in. Claude Opus 5.5 by default (`--model` to change), through Anthropic's SDK. Needs `ANTHROPIC_API_KEY`: copy `.env.example` to `.env` and fill it in (`npm run wion` reads `.env`; git ignores it). |
+| `claude` | Opt-in. Claude Opus 5.5 by default (`--model` to change), through Anthropic's SDK. Needs `ANTHROPIC_API_KEY`: copy `.env.example` to `.env` and fill it in (`npm run wion` reads `.env`; git ignores it). Create the key in the Claude Console under API keys, for a **workspace** (a key for the whole organization is refused). A call waits at most 3 minutes. |
 
 **The answer is checked, never trusted:** the AI must answer with JSON in a fixed shape; our code writes the Gherkin; then `bddgen` checks it against the shared steps only. A made-up step fails the check and is named; such a draft is kept in `.wion/proposals/` with the reason but never offered for review. Steps the AI would need but that do not exist are listed as comments ("missing steps"), for a person to write.
 
 **Review** shows each scenario of each passing proposal and asks: approve, reject, skip the proposal, or quit. Approved scenarios are checked again and written to `tests/features/<feature>/<feature>.feature` with a header saying who drafted them and when they were approved (or added to the end of an existing file; nothing is overwritten). Every drafted feature carries the `@ai-drafted` tag.
 
-**Ledger:** every real AI call adds a line to `.wion/ledger.jsonl` with the provider, model, tokens, seconds and an estimated cost; the command prints the same.
+**Run what you approve.** `bddgen` checks that every step exists, not that the steps come in a working order. The first real draft (the `watering-reminders` feature) passed the check, yet two of its scenarios failed when run: they changed a field without opening the form first. So run approved scenarios before committing them (`review` prints the command), and fix or drop what fails. Since then the AI sees the hand-written features, which show the order.
+
+**Ledger:** every real AI call (also a failed one) adds a line to `.wion/ledger.jsonl` with the provider, model, tokens, seconds and an estimated cost; the command prints the same.
 
 ## How it's built
 

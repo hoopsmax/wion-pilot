@@ -186,6 +186,13 @@ Built in five small steps, each one approved first. The scope was narrowed to th
 
 **Done when:** drafting "watering reminders" produces scenarios that `bddgen` accepts and that pass after approval.
 
+**Built (M5):**
+
+- Sprout got watering reminders first (last-watered day, "Water in 3 days" / "2 days overdue", a Watered button that works offline; the later watering day wins without a conflict), with a hand-written `reminders` feature, so the AI had real steps to use.
+- `wion draft` by topic, by code change (`--diff <base>`), or both; with a code change the AI also writes what changed, a test plan and the steps it would need ("missing steps"). Providers: `none` (default), `ollama`, `claude` (Anthropic's SDK, Claude Opus 5.5). Redaction before sending; a 3-minute limit per call; every call, also a failed one, in the ledger.
+- Our code writes the Gherkin and checks it with `bddgen` against the shared steps only; `wion review` approves scenario by scenario and checks again before writing.
+- **The real run:** Claude drafted 13 scenarios from the reminders change (16,837 tokens in, 4,444 out, 55 s, about $0.16). All passed `bddgen` and were approved; when run, 11 passed and 2 failed, because they changed a field without opening the form. Kept: the 5 scenarios that were new (two fixed by hand, marked in the file). Lesson: the step list does not show step order, so the AI now sees the hand-written features as examples.
+
 ### M6: Teach mode (1 day)
 
 - `wion teach <feature>` opens the app. You click through it, and each action becomes a Gherkin step from the shared step library, using names from the app map.
