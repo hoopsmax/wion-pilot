@@ -4,6 +4,7 @@ import { chromium, type Page } from '@playwright/test';
 import type { SignInConfig } from '../shared/config.ts';
 import type { AppMap, Screen } from './app-map.ts';
 import { sameScreen, screenshotPath, triageLinks } from './crawl-rules.ts';
+import { signIn } from '../shared/sign-in.ts';
 import { readScreen } from './screen-reader.ts';
 import { routePattern } from './urls.ts';
 import { buildViewer } from './viewer.ts';
@@ -80,61 +81,6 @@ async function visit(page: Page, state: CrawlState, { url, depth }: QueuedPage):
       state.queue.push({ url: next, depth: depth + 1 });
     }
   }
-}
-
-async function step(action: () => Promise<unknown>, problem: string): Promise<void> {
-  try {
-    await action();
-  } catch (error) {
-    throw new Error(problem, { cause: error });
-  }
-}
-
-/**
- * Waits for whichever comes first: the page leaves the sign-in route (undefined), or an error
- * alert appears (its text), as forms usually show "wrong password". Without the alert a wrong
- * password would only show up as a timeout.
- */
-async function signInOutcome(
-  page: Page,
-  signInPattern: string,
-  watchAlerts: boolean,
-): Promise<string | undefined> {
-  const left = page
-    .waitForURL((url) => routePattern(url.toString()) !== signInPattern)
-    .then(() => undefined);
-  if (!watchAlerts) return left;
-  const alert = page.getByRole('alert').filter({ hasText: /\S/ }).first();
-  const alerted = alert.waitFor({ state: 'visible' }).then(async () => {
-    const text = await alert.innerText();
-    return text.replace(/\s+/g, ' ').trim();
-  });
-  // Promise.any settles with the first success; the other wait ends with the browser, unheard.
-  return Promise.any([left, alerted]);
-}
-
-/** The only place the crawler types or clicks: it fills the sign-in form and presses its button. */
-async function signIn(page: Page, signInConfig: SignInConfig): Promise<void> {
-  const signInPattern = routePattern(page.url());
-  const fix = 'Check map.signIn in wion.config.json.';
-  for (const [label, value] of Object.entries(signInConfig.fields)) {
-    await step(
-      () => page.getByLabel(label, { exact: true }).fill(value),
-      `Sign-in: no field labelled "${label}" on ${page.url()}. ${fix}`,
-    );
-  }
-  // An alert that is already there before signing in says nothing about the sign-in.
-  const watchAlerts = !(await page.getByRole('alert').first().isVisible());
-  await step(
-    () => page.getByRole('button', { name: signInConfig.submit, exact: true }).click(),
-    `Sign-in: no button named "${signInConfig.submit}" on ${page.url()}. ${fix}`,
-  );
-  let alertText: string | undefined;
-  await step(async () => {
-    alertText = await signInOutcome(page, signInPattern, watchAlerts);
-  }, `Sign-in did not leave ${signInPattern}. Is the password right? ${fix}`);
-  if (alertText !== undefined) throw new Error(`Sign-in failed: ${alertText} ${fix}`);
-  await page.waitForLoadState('networkidle');
 }
 
 async function crawlPages(page: Page, state: CrawlState): Promise<void> {
