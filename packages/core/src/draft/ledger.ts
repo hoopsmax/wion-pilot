@@ -13,6 +13,8 @@ export interface LedgerEntry {
   seconds: number;
   /** null when the model's price is not known. */
   estimatedCostUsd: number | null;
+  /** Why the call failed, when it did (a timeout, say); its tokens are then unknown, so 0. */
+  failed?: string;
 }
 
 export function ledgerEntry(call: {
@@ -22,8 +24,10 @@ export function ledgerEntry(call: {
   model: string;
   usage: Usage;
   seconds: number;
+  failed?: string;
 }): LedgerEntry {
   return {
+    ...(call.failed === undefined ? {} : { failed: call.failed }),
     time: call.time.toISOString(),
     command: call.command,
     provider: call.provider,

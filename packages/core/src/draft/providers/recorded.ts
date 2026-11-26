@@ -8,6 +8,7 @@ import type { Provider } from './provider.ts';
 export function recordedProvider(answerFile: string): Provider {
   return {
     name: 'recorded',
+    model: 'recorded',
     callsAModel: false,
     async draft() {
       let text: string;

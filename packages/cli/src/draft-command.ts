@@ -83,7 +83,33 @@ function providerFor(args: DraftArgs): Provider {
 /** Calls the provider; a real call goes into the ledger before its answer is even looked at. */
 async function callProvider(provider: Provider, prompt: Prompt, ledger: string, io: DraftIo) {
   const started = io.now();
-  const reply = await provider.draft(prompt);
+  const seconds = () => (io.now().getTime() - started.getTime()) / 1000;
+  if (provider.callsAModel) {
+    io.log(
+      `Asking ${provider.name}/${provider.model} for drafts. This usually takes under a minute…`,
+    );
+  }
+  let reply;
+  try {
+    reply = await provider.draft(prompt);
+  } catch (error) {
+    // A failed call is still a call: it goes into the ledger too.
+    if (provider.callsAModel) {
+      await appendToLedger(
+        ledger,
+        ledgerEntry({
+          time: started,
+          command: 'draft',
+          provider: provider.name,
+          model: provider.model,
+          usage: { inputTokens: 0, outputTokens: 0 },
+          seconds: seconds(),
+          failed: error instanceof Error ? error.message : String(error),
+        }),
+      );
+    }
+    throw error;
+  }
   if (provider.callsAModel) {
     const entry = ledgerEntry({
       time: started,
@@ -91,7 +117,7 @@ async function callProvider(provider: Provider, prompt: Prompt, ledger: string, 
       provider: provider.name,
       model: reply.model,
       usage: reply.usage,
-      seconds: (io.now().getTime() - started.getTime()) / 1000,
+      seconds: seconds(),
     });
     await appendToLedger(ledger, entry);
     const cost =

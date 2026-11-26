@@ -1,5 +1,5 @@
 import { ANSWER_SCHEMA } from '../answer.ts';
-import type { Provider } from './provider.ts';
+import { DRAFT_TIMEOUT_MS, type Provider } from './provider.ts';
 
 export const OLLAMA_DEFAULT_URL = 'http://localhost:11434';
 
@@ -26,12 +26,14 @@ export function ollamaProvider({
 }): Provider {
   return {
     name: 'ollama',
+    model,
     callsAModel: true,
     async draft(prompt) {
       let response: Response;
       try {
         response = await fetchFn(`${baseUrl}/api/chat`, {
           method: 'POST',
+          signal: AbortSignal.timeout(DRAFT_TIMEOUT_MS),
           headers: { 'content-type': 'application/json' },
           body: JSON.stringify({
             model,
@@ -46,6 +48,11 @@ export function ollamaProvider({
           }),
         });
       } catch (error) {
+        if (error instanceof DOMException && error.name === 'TimeoutError') {
+          throw new Error('Ollama did not answer within 3 minutes. Try a smaller model or topic.', {
+            cause: error,
+          });
+        }
         throw new Error(
           `Ollama is not answering at ${baseUrl}. Is it running? Start it with: ollama serve`,
           {

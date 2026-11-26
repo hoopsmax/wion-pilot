@@ -4,7 +4,7 @@ import type {
   MessageCreateParamsNonStreaming,
 } from '@anthropic-ai/sdk/resources/beta/messages/messages';
 import { ANSWER_SCHEMA } from '../answer.ts';
-import type { Provider } from './provider.ts';
+import { DRAFT_TIMEOUT_MS, type Provider } from './provider.ts';
 
 export const CLAUDE_DEFAULT_MODEL = 'claude-opus-5-5';
 
@@ -28,6 +28,14 @@ function explain(error: unknown): Error {
   }
   if (error instanceof Anthropic.RateLimitError) {
     return new Error('Claude is rate-limiting this key. Try again in a minute.', { cause: error });
+  }
+  if (error instanceof Anthropic.APIConnectionTimeoutError) {
+    return new Error(
+      'Claude did not answer within 3 minutes. Try again, or draft a narrower topic.',
+      {
+        cause: error,
+      },
+    );
   }
   if (error instanceof Anthropic.APIConnectionError) {
     return new Error('Cannot reach api.anthropic.com. Check the network.', { cause: error });
@@ -58,11 +66,14 @@ export function claudeProvider({
 }: { model?: string; client?: ClaudeClient } = {}): Provider {
   return {
     name: 'claude',
+    model,
     callsAModel: true,
     async draft(prompt) {
       let message: BetaMessage;
       try {
-        message = await (client ?? new Anthropic()).beta.messages.create({
+        message = await (
+          client ?? new Anthropic({ timeout: DRAFT_TIMEOUT_MS, maxRetries: 1 })
+        ).beta.messages.create({
           model,
           max_tokens: 16_000,
           betas: ['server-side-fallback-2026-07-01'],
