@@ -6,7 +6,7 @@ import { Person } from '../pages/person.ts';
 import { attachIfFailed, recordBrowserLog } from './browser-log.ts';
 import { personNamed } from './people.ts';
 import { SproutApi, testPlantName } from './sprout-api.ts';
-import type { MapRun } from './wion-cli.ts';
+import type { MapRun, WionRun } from './wion-cli.ts';
 
 interface People {
   /** The person with this name, each in their own browser; opened on first use. */
@@ -19,6 +19,8 @@ export interface ScenarioState {
   newPlant?: { name: string; light: string };
   /** The day the scenario treats as today (see "it is … on …'s device"). */
   today?: string;
+  /** The last run of another wion command (draft, review). */
+  wionRun?: WionRun;
   /** The last run of wion map. */
   mapRun?: MapRun;
   /** Sprout's own plants (not test data) before something happened. */

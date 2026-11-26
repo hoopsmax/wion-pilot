@@ -1,0 +1,24 @@
+{
+  "feature": "singing-to-plants",
+  "title": "Singing to plants",
+  "description": "Extra reminder checks.",
+  "changeSummary": "",
+  "testPlan": ["A plant watered today"],
+  "scenarios": [
+    {
+      "name": "Singing helps",
+      "steps": [
+        "Given a test plant exists",
+        "And Ava is signed in",
+        "When Ava sings to the test plant",
+        "Then Ava sees the test plant marked \"Water today\""
+      ]
+    }
+  ],
+  "missingSteps": [
+    {
+      "phrase": "Ava sorts plants by due date",
+      "purpose": "The list has no sorting yet."
+    }
+  ]
+}
