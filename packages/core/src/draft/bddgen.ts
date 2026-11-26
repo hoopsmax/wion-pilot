@@ -10,6 +10,19 @@ export interface BddgenRun {
 }
 
 /**
+ * The environment without a surrounding test run's state. Inside a Playwright worker,
+ * PLAYWRIGHT_BDD_CONFIGS holds the main suite's config, and bddgen would check that suite
+ * instead of the draft (and pass a draft with made-up steps).
+ */
+export function ownEnvironment(env: NodeJS.ProcessEnv = process.env): NodeJS.ProcessEnv {
+  return Object.fromEntries(
+    Object.entries(env).filter(
+      ([name]) => !name.startsWith('PLAYWRIGHT_BDD_') && name !== 'TEST_WORKER_INDEX',
+    ),
+  );
+}
+
+/**
  * Runs playwright-bdd's `bddgen` in draft-check mode: features from `draftFolder`, steps from the
  * shared library only (see WION_DRAFT_CHECK in playwright.config.ts).
  */
@@ -22,7 +35,7 @@ export async function runBddgen(
   try {
     const { stdout, stderr } = await execFileAsync(process.execPath, [cli, command], {
       cwd: root,
-      env: { ...process.env, WION_DRAFT_CHECK: draftFolder },
+      env: { ...ownEnvironment(), WION_DRAFT_CHECK: draftFolder },
       timeout: 120_000,
     });
     return { exitCode: 0, output: stdout + stderr };
