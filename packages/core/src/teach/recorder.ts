@@ -39,6 +39,8 @@ interface RecorderWindow {
   };
   setTimeout(callback: () => void, ms: number): unknown;
   wionRecorderInstalled?: boolean;
+  /** Reports the page has sent and Node has not confirmed yet. */
+  wionPendingReports?: Set<Promise<unknown>>;
 }
 
 /** Runs in the browser: reports clicks, typing, choices and Option/Alt+clicks, once per page. */
@@ -46,9 +48,15 @@ function recorderInPage(binding: string): void {
   const page = globalThis as unknown as RecorderWindow & Record<string, unknown>;
   if (page.wionRecorderInstalled === true) return;
   page.wionRecorderInstalled = true;
+  const pending = new Set<Promise<unknown>>();
+  page.wionPendingReports = pending;
+  // Each report is a promise that settles once Node has received it; stop() waits for all.
   const send = (action: Record<string, string>) => {
     const record = page[binding];
-    if (typeof record === 'function') (record as (action: Record<string, string>) => void)(action);
+    if (typeof record !== 'function') return;
+    const delivered = (record as (action: Record<string, string>) => Promise<unknown>)(action);
+    pending.add(delivered);
+    void delivered.finally(() => pending.delete(delivered));
   };
   const clean = (text: string | null | undefined) => (text ?? '').replace(/\s+/g, ' ').trim();
   const nameOf = (element: RecordedElement) =>
@@ -157,8 +165,15 @@ export async function startRecording(page: Page): Promise<Recording> {
   await page.evaluate(recorderInPage, BINDING);
   return {
     async stop() {
-      // A round trip to the page: its earlier reports have arrived by the time it answers.
-      if (!page.isClosed()) await page.evaluate(() => true);
+      // Playwright does not promise that a page's reports arrive before the answer to a later
+      // request, so the page itself is asked to wait until every report it sent was received.
+      if (!page.isClosed()) {
+        await page.evaluate(async () => {
+          const reports = (globalThis as { wionPendingReports?: Set<Promise<unknown>> })
+            .wionPendingReports;
+          await Promise.allSettled([...(reports ?? [])]);
+        });
+      }
       return [...actions];
     },
   };
