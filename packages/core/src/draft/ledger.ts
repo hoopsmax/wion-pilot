@@ -27,7 +27,6 @@ export function ledgerEntry(call: {
   failed?: string;
 }): LedgerEntry {
   return {
-    ...(call.failed === undefined ? {} : { failed: call.failed }),
     time: call.time.toISOString(),
     command: call.command,
     provider: call.provider,
@@ -36,6 +35,8 @@ export function ledgerEntry(call: {
     outputTokens: call.usage.outputTokens,
     seconds: Math.round(call.seconds * 10) / 10,
     estimatedCostUsd: estimateCost(call.provider, call.model, call.usage) ?? null,
+    // Last, so a ledger line reads like the others and then says why the call failed.
+    ...(call.failed === undefined ? {} : { failed: call.failed }),
   };
 }
 
