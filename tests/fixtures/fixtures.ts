@@ -11,6 +11,8 @@ import type { MapRun, WionRun } from './wion-cli.ts';
 interface People {
   /** The person with this name, each in their own browser; opened on first use. */
   as(name: string): Promise<Person>;
+  /** Waits until everyone online has sent their changes to the server. */
+  waitUntilChangesSent(): Promise<void>;
 }
 
 /** What one scenario remembers between its steps. Fresh for every test, never shared. */
@@ -69,6 +71,9 @@ export const test = base.extend<Fixtures>({
         opened.set(known, person);
         return person;
       },
+      async waitUntilChangesSent() {
+        await Promise.all([...opened.values()].map((person) => person.waitUntilChangesSent()));
+      },
     });
     await attachIfFailed(testInfo, log);
     await Promise.all(extraContexts.map((context) => context.close()));
@@ -89,9 +94,12 @@ export const test = base.extend<Fixtures>({
     await api.deletePlant(plant.id);
   },
 
-  createdPlantNames: async ({ api }, use) => {
+  createdPlantNames: async ({ api, people }, use) => {
     const names: string[] = [];
     await use(names);
+    // A plant saved in a browser reaches the server a moment later. Deleting before that would
+    // find nothing, and the plant would arrive after the cleanup and stay.
+    if (names.length > 0) await people.waitUntilChangesSent();
     const leftovers = (await api.plants()).filter((plant) => names.includes(plant.name));
     await Promise.all(leftovers.map((plant) => api.deletePlant(plant.id)));
   },

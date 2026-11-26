@@ -68,6 +68,15 @@ export class Person {
     await expect(this.plantList.anyNotSynced).toHaveCount(0);
   }
 
+  /**
+   * Waits until this browser has sent every change it holds: the banner no longer says Syncing.
+   * Offline, nothing can be sent, so there is nothing to wait for.
+   */
+  async waitUntilChangesSent(): Promise<void> {
+    if (this.#offline) return;
+    await expect(this.banner.status('Syncing')).toBeHidden();
+  }
+
   async goOffline(): Promise<void> {
     await this.context.setOffline(true);
     this.#offline = true;
