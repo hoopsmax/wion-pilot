@@ -15,6 +15,8 @@ interface People {
 
 /** What one scenario remembers between its steps. Fresh for every test, never shared. */
 export interface ScenarioState {
+  /** The fresh test name that "{new name}" stands for in this scenario's steps. */
+  newName?: string;
   /** A plant the scenario added through the form, with the light level it was given. */
   newPlant?: { name: string; light: string };
   /** The day the scenario treats as today (see "it is … on …'s device"). */
