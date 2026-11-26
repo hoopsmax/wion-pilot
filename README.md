@@ -58,6 +58,8 @@ Then close the terminal window, open a new one, and run the setup above.
 | `npm run demo:reset` | Restore Sprout's seed data. Works while the demo is running. |
 | `npm run map:sprout` | Map the running Sprout (signed in as Ava) into `.wion/map/`. See [Map an app](#map-an-app). |
 | `npm run wion -- map <url>` | Map any web app. `npm run wion -- --help` lists the options. |
+| `npm run wion -- draft "<topic>"` | Let an AI draft scenarios for review. See [AI drafts](#ai-drafts). |
+| `npm run wion -- review` | Approve or reject drafted scenarios, one by one. |
 | `npm run demo:bug` | Run one scenario that fails on purpose and write its bug-report draft. npm reports a failure: that is the demo. |
 | `npm run check` | Lint (ESLint and Prettier), typecheck and unit tests. Run it before every commit. |
 | `npm run format` | Format all files with Prettier. |
@@ -108,6 +110,7 @@ The features are written in plain language (Gherkin) and run on Playwright:
 | `offline-sync` | Changes made offline wait on the device ("Not synced yet", sign-out blocked) and reach the server when back online. |
 | `reminders` | Each reminder wording, marking a plant watered (also offline), with "today" fixed by Playwright's clock so dates never flake. |
 | `conflict` | Ava and Ben in two browsers: different fields are combined, equal values are no conflict, and only clashing fields are asked about, also after working offline or while typing. |
+| `draft` | `wion draft` and `wion review` on saved answers: a good answer becomes a proposal, a made-up step is refused, only approved scenarios are written, and the prompt has personal data removed. |
 | `map` | `wion map` finds every screen and form field of Sprout with a locator for each, changes no data, and explains a wrong password or an app that is not running. |
 
 Run them with `npm test`, then open the report with `npx playwright show-report`. The suite starts its own Sprout on port 4610 with its own data, so it never touches `npm run demo`.
@@ -174,6 +177,35 @@ For each screen the map keeps the address and route pattern (`/plants/:id/edit`)
 **Known limit:** a crawler only finds screens that a link leads to. Sprout's conflict screen appears only while a conflict is waiting and has no link of its own, so it is not on the map. The `conflict` feature tests it instead.
 
 In CI the "App map" job maps Sprout on every push and keeps the result as the `app-map` artifact. The code lives in `packages/core/src/map/` and the command in `packages/cli/`.
+
+## AI drafts
+
+`wion draft` asks an AI for new BDD scenarios; `wion review` lets a person approve them one by one. **Nothing enters `tests/features/` without that approval.**
+
+```bash
+npm run wion -- draft "watering reminders"                                # by topic
+npm run wion -- draft --diff main --provider claude                       # from the code change since main
+npm run wion -- draft "watering reminders" --diff main --provider claude  # both
+npm run wion -- review
+```
+
+**What the AI gets:** the topic and/or the app's code change (`git diff`, files under `apps/` only), a short summary of the app map (screens, fields, buttons; no screenshots; run `npm run map:sprout` first for better drafts), the list of shared steps from `tests/steps/`, and one feature as a style example. With a code change it also explains in plain words what changed and writes a test plan.
+
+**Before anything is sent**, the prompt is redacted: email addresses, the values of environment variables named like `PASSWORD`, `TOKEN`, `KEY` or `SECRET`, and long key- or hash-like strings become `<email>` / `<secret>`. The command says how many it removed.
+
+**Providers** (one interface, `packages/core/src/draft/providers/`):
+
+| Provider | What it does |
+| --- | --- |
+| `none` (default) | No AI call. Saves the prompt in `.wion/prompts/` to paste into any chat; bring the answer back with `--answer <file>`. |
+| `ollama` | A local model through Ollama (`--model`, default `llama3.1`). Free; nothing leaves the computer. |
+| `claude` | Opt-in. Claude Opus 5.5 by default (`--model` to change), through Anthropic's SDK. Needs `ANTHROPIC_API_KEY`: copy `.env.example` to `.env` and fill it in (`npm run wion` reads `.env`; git ignores it). |
+
+**The answer is checked, never trusted:** the AI must answer with JSON in a fixed shape; our code writes the Gherkin; then `bddgen` checks it against the shared steps only. A made-up step fails the check and is named; such a draft is kept in `.wion/proposals/` with the reason but never offered for review. Steps the AI would need but that do not exist are listed as comments ("missing steps"), for a person to write.
+
+**Review** shows each scenario of each passing proposal and asks: approve, reject, skip the proposal, or quit. Approved scenarios are checked again and written to `tests/features/<feature>/<feature>.feature` with a header saying who drafted them and when they were approved (or added to the end of an existing file; nothing is overwritten). Every drafted feature carries the `@ai-drafted` tag.
+
+**Ledger:** every real AI call adds a line to `.wion/ledger.jsonl` with the provider, model, tokens, seconds and an estimated cost; the command prints the same.
 
 ## How it's built
 

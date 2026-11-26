@@ -47,4 +47,17 @@ async function main(argv: string[]): Promise<number> {
   }
 }
 
+/**
+ * Keys such as ANTHROPIC_API_KEY can live in .env, which git ignores. Variables already set win;
+ * no .env is normal and says nothing.
+ */
+function loadDotEnv(): void {
+  try {
+    process.loadEnvFile('.env');
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code !== 'ENOENT') throw error;
+  }
+}
+
+loadDotEnv();
 process.exitCode = await main(process.argv.slice(2));
