@@ -17,6 +17,7 @@ describe('featureTags and isExample', () => {
     ['Feature: Hand-written\n', true],
     ['@ai-drafted\nFeature: Drafted\n', false],
     ['@not-an-example\nFeature: Tests wion itself\n', false],
+    ['@recorded\nFeature: Recorded by a person\n', true],
   ])('%j is an example: %s', (text, example) => {
     expect(isExample(text)).toBe(example);
   });

@@ -47,6 +47,24 @@ describe('parseConfig', () => {
   });
 });
 
+describe('the teach section', () => {
+  test('reads the person and the starting steps', () => {
+    const text = JSON.stringify({ teach: { person: 'Ava', given: ['Ava is signed in'] } });
+    expect(parseConfig(text, 'wion.config.json', {})).toEqual({
+      teach: { person: 'Ava', given: ['Ava is signed in'] },
+    });
+  });
+
+  test.each([
+    [{ person: 'Ava Smith' }, /teach.person must be one word/],
+    [{ given: [] }, /teach.person must be one word/],
+    [{ person: 'Ava', given: ['Given Ava is signed in'] }, /without "Given"/],
+    [{ person: 'Ava', given: 'Ava is signed in' }, /teach.given must be a list/],
+  ])('a wrong teach section is explained: %j', (teach, message) => {
+    expect(() => parseConfig(JSON.stringify({ teach }), 'wion.config.json', {})).toThrow(message);
+  });
+});
+
 describe('resolveEnv', () => {
   test('replaces every ${NAME} and keeps other text', () => {
     expect(resolveEnv('${A}-${B} and $C', { A: '1', B: '2' }, 'x')).toBe('1-2 and $C');

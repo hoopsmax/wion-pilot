@@ -2,8 +2,15 @@
   "map": {
     "signIn": {
       "url": "/sign-in",
-      "fields": { "Email": "ava@sprout.test", "Password": "${SPROUT_PASSWORD}" },
+      "fields": {
+        "Email": "ava@sprout.test",
+        "Password": "${SPROUT_PASSWORD}"
+      },
       "submit": "Sign in"
     }
+  },
+  "teach": {
+    "person": "Ava",
+    "given": ["Ava is signed in"]
   }
 }

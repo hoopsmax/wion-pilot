@@ -10,14 +10,31 @@ export interface DraftOrigin {
 /** Tag on every drafted feature, so AI-written scenarios can always be found and filtered. */
 export const DRAFT_TAG = '@ai-drafted';
 
+/** Tag on scenarios a person recorded with wion teach: made by a person, so not AI drafts. */
+export const RECORDED_TAG = '@recorded';
+
+/** The provider name of a proposal that wion teach recorded rather than an AI drafted. */
+export const TEACH_PROVIDER = 'teach';
+
+function isRecorded(origin: DraftOrigin): boolean {
+  return origin.provider === TEACH_PROVIDER;
+}
+
+/** Who made it, for the header: "Drafted by claude/…" or "Recorded with wion teach". */
+function madeBy(origin: DraftOrigin): string {
+  return isRecorded(origin)
+    ? `Recorded with wion teach on ${origin.date}`
+    : `Drafted by ${origin.provider}/${origin.model} on ${origin.date}`;
+}
+
 /** The first line of every proposal until `wion review` approves it. */
 export function draftHeader(origin: DraftOrigin): string {
-  return `# Drafted by ${origin.provider}/${origin.model} on ${origin.date}. Not approved yet.`;
+  return `# ${madeBy(origin)}. Not approved yet.`;
 }
 
 /** The first line of an approved feature, or the note above scenarios added to an existing one. */
 export function approvedHeader(origin: DraftOrigin, approvedOn: string): string {
-  return `# Drafted by ${origin.provider}/${origin.model} on ${origin.date}, approved with wion review on ${approvedOn}.`;
+  return `# ${madeBy(origin)}, approved with wion review on ${approvedOn}.`;
 }
 
 export function scenarioLines(scenarios: DraftAnswer['scenarios']): string[] {
@@ -61,7 +78,7 @@ export function toGherkin(
       lines.push(`#   - "${oneLine(missing.phrase)}": ${oneLine(missing.purpose)}`);
     }
   }
-  lines.push(DRAFT_TAG, `Feature: ${oneLine(answer.title)}`);
+  lines.push(isRecorded(origin) ? RECORDED_TAG : DRAFT_TAG, `Feature: ${oneLine(answer.title)}`);
   const description = descriptionLines(answer.description);
   if (answer.changeSummary !== '') {
     description.push('', ...descriptionLines(`What changed: ${answer.changeSummary}`));
