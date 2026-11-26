@@ -1,3 +1,4 @@
+@not-an-example
 Feature: Mapping an app
   wion map opens each screen of an app by its address, signs in like a person
   (as Ava, from wion.config.json) and writes down every screen, field and locator.

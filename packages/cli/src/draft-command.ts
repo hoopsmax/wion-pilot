@@ -2,6 +2,7 @@ import { readFile } from 'node:fs/promises';
 import { join, resolve } from 'node:path';
 import { parseAnswerText, type DraftAnswer } from '../../core/src/draft/answer.ts';
 import { checkDraft } from '../../core/src/draft/check.ts';
+import { readExampleFeatures } from '../../core/src/draft/examples.ts';
 import { readDiff } from '../../core/src/draft/diff.ts';
 import { toGherkin } from '../../core/src/draft/gherkin.ts';
 import { appendToLedger, ledgerEntry } from '../../core/src/draft/ledger.ts';
@@ -29,9 +30,6 @@ export function wionPaths(root: string, wionDir: string) {
   };
 }
 
-/** The feature shown to the AI for its style: hand-written, short, and uses shared steps. */
-const STYLE_EXAMPLE = 'tests/features/reminders/reminders.feature';
-
 export const OLLAMA_DEFAULT_MODEL = 'llama3.1';
 
 export interface DraftIo {
@@ -58,14 +56,14 @@ function describeRedaction({ emails, secrets }: Replaced): string {
 }
 
 async function redactedPrompt(args: DraftArgs, io: DraftIo): Promise<Prompt> {
-  const [steps, map, example, diff] = await Promise.all([
+  const [steps, map, examples, diff] = await Promise.all([
     listSharedSteps(io.root),
     readMapIfAny(wionPaths(io.root, args.wionDir).map, io.log),
-    readFile(join(io.root, STYLE_EXAMPLE), 'utf8'),
+    readExampleFeatures(io.root),
     args.diffBase === undefined ? undefined : readDiff(io.root, args.diffBase),
   ]);
   const { prompt, replaced } = redactPrompt(
-    buildPrompt({ topic: args.topic, diff, map, steps, example }),
+    buildPrompt({ topic: args.topic, diff, map, steps, examples }),
     io.env,
   );
   io.log(describeRedaction(replaced));

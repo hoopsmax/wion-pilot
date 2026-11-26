@@ -1,3 +1,4 @@
+@not-an-example
 Feature: AI drafts, approved by a person
   wion draft turns an AI answer into a proposal checked with bddgen, and wion review lets a
   person approve each scenario before it enters the features folder. These scenarios replay

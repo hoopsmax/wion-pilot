@@ -49,7 +49,12 @@ const map: AppMap = {
 const input = {
   map,
   steps: ['Given {word} is signed in', 'When {word} marks the test plant watered'],
-  example: 'Feature: Example\n  Scenario: One\n    Given Ava is signed in\n',
+  examples: [
+    {
+      path: 'tests/features/edit/edit.feature',
+      text: 'Feature: Example\n  Scenario: One\n    Given Ava is signed in\n',
+    },
+  ],
 };
 
 describe('summarizeMap', () => {
@@ -73,7 +78,9 @@ describe('buildPrompt', () => {
     expect(system).toContain('"missingSteps"');
     expect(user).toContain('## What to test\n\nwatering reminders');
     expect(user).toContain('- When {word} marks the test plant watered');
-    expect(user).toContain('```gherkin\nFeature: Example');
+    expect(system).toContain('Copy the order you see in the example features');
+    expect(user).toContain('## Example features');
+    expect(user).toContain('### tests/features/edit/edit.feature\n\n```gherkin\nFeature: Example');
     expect(user).not.toContain('## Code change');
   });
 

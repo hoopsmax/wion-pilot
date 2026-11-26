@@ -1,4 +1,4 @@
-@demo-bug
+@demo-bug @not-an-example
 Feature: Bug-report demo
   This scenario fails on purpose: it expects a message Sprout never shows. It exists so that
   `npm run demo:bug` can produce a real bug-report draft at any time. A normal `npm test` skips it.
