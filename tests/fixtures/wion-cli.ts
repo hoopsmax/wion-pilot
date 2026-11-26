@@ -19,9 +19,40 @@ export interface MapRun {
   map: AppMap | undefined;
 }
 
+/** What one run of a wion command printed, and how it ended. */
+export interface WionRun {
+  exitCode: number;
+  output: string;
+}
+
 /**
- * Runs the real command, the way a person does, with the sign-in from wion.config.json and the
- * password in SPROUT_PASSWORD. Each test passes its own output folder, so runs never collide.
+ * Runs the real `wion` command, the way a person does. `input` is typed in line by line (for
+ * wion review); `env` adds variables, such as a password.
+ */
+export async function runWion(
+  args: string[],
+  { env = {}, input = '' }: { env?: Record<string, string>; input?: string } = {},
+): Promise<WionRun> {
+  const running = execFileAsync(process.execPath, [cli, ...args], {
+    cwd: repoRoot,
+    env: { ...process.env, ...env },
+    timeout: 120_000,
+  });
+  running.child.stdin?.end(input);
+  try {
+    const { stdout, stderr } = await running;
+    return { exitCode: 0, output: stdout + stderr };
+  } catch (error) {
+    const failed = error as ExecException & { stdout?: string; stderr?: string };
+    // A number is the command's own exit code; anything else (not started, killed) is a real error.
+    if (typeof failed.code !== 'number') throw error;
+    return { exitCode: failed.code, output: `${failed.stdout ?? ''}${failed.stderr ?? ''}` };
+  }
+}
+
+/**
+ * Runs wion map with the sign-in from wion.config.json and the password in SPROUT_PASSWORD. Each
+ * test passes its own output folder, so runs never collide.
  */
 export async function runWionMap({
   url,
@@ -32,22 +63,9 @@ export async function runWionMap({
   outDir: string;
   password: string;
 }): Promise<MapRun> {
-  let exitCode = 0;
-  let output: string;
-  try {
-    const { stdout, stderr } = await execFileAsync(
-      process.execPath,
-      [cli, 'map', url, '--out', outDir],
-      { cwd: repoRoot, env: { ...process.env, SPROUT_PASSWORD: password }, timeout: 120_000 },
-    );
-    output = stdout + stderr;
-  } catch (error) {
-    const failed = error as ExecException & { stdout?: string; stderr?: string };
-    // A number is the command's own exit code; anything else (not started, killed) is a real error.
-    if (typeof failed.code !== 'number') throw error;
-    exitCode = failed.code;
-    output = `${failed.stdout ?? ''}${failed.stderr ?? ''}`;
-  }
+  const { exitCode, output } = await runWion(['map', url, '--out', outDir], {
+    env: { SPROUT_PASSWORD: password },
+  });
   const map =
     exitCode === 0
       ? (JSON.parse(await readFile(join(outDir, 'app-map.json'), 'utf8')) as AppMap)

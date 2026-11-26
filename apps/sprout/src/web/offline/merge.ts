@@ -9,6 +9,11 @@ export interface MergeResult {
   clashes: FieldName[];
 }
 
+/** Watering is a fact, not an opinion: the later of two waterings is simply true. */
+function laterDay(a: string, b: string): string {
+  return a > b ? a : b;
+}
+
 /**
  * Combines my edit with someone else's, field by field:
  * - I did not change a field: take theirs.
@@ -36,6 +41,11 @@ export function mergeFields(
     name: decide('name'),
     light: decide('light'),
     wateringIntervalDays: decide('wateringIntervalDays'),
+    // Never a question for the user: if both watered, the later day wins.
+    lastWateredOn:
+      mine.lastWateredOn === base.lastWateredOn
+        ? theirs.lastWateredOn
+        : laterDay(mine.lastWateredOn, theirs.lastWateredOn),
   };
   return { merged, clashes };
 }

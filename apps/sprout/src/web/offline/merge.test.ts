@@ -2,7 +2,12 @@ import { describe, expect, test } from 'vitest';
 import type { PlantFields } from '../../shared/plant.ts';
 import { mergeFields } from './merge.ts';
 
-const base: PlantFields = { name: 'Window fern', light: 'medium', wateringIntervalDays: 4 };
+const base: PlantFields = {
+  name: 'Window fern',
+  light: 'medium',
+  wateringIntervalDays: 4,
+  lastWateredOn: '2026-06-10',
+};
 
 describe('mergeFields', () => {
   test('a field I did not change takes their value', () => {
@@ -36,15 +41,44 @@ describe('mergeFields', () => {
   });
 
   test('only the clashing fields are listed; agreeing and one-sided ones are merged', () => {
-    const mine = { name: 'Fern (Ava)', light: 'low' as const, wateringIntervalDays: 10 };
-    const theirs = { name: 'Fern (Ben)', light: 'medium' as const, wateringIntervalDays: 10 };
+    const mine = {
+      name: 'Fern (Ava)',
+      light: 'low' as const,
+      wateringIntervalDays: 10,
+      lastWateredOn: '2026-06-10',
+    };
+    const theirs = {
+      name: 'Fern (Ben)',
+      light: 'medium' as const,
+      wateringIntervalDays: 10,
+      lastWateredOn: '2026-06-10',
+    };
     expect(mergeFields(base, mine, theirs)).toEqual({
-      merged: { name: 'Fern (Ben)', light: 'low', wateringIntervalDays: 10 },
+      merged: {
+        name: 'Fern (Ben)',
+        light: 'low',
+        wateringIntervalDays: 10,
+        lastWateredOn: '2026-06-10',
+      },
       clashes: ['name'],
     });
   });
 
   test('everything equal: nothing to decide', () => {
     expect(mergeFields(base, base, base)).toEqual({ merged: base, clashes: [] });
+  });
+});
+
+describe('watering is never a question', () => {
+  test('both people watered on different days: the later day wins, no clash', () => {
+    const mine = { ...base, lastWateredOn: '2026-06-14' };
+    const theirs = { ...base, lastWateredOn: '2026-06-12' };
+    expect(mergeFields(base, mine, theirs)).toEqual({ merged: mine, clashes: [] });
+    expect(mergeFields(base, theirs, mine)).toEqual({ merged: mine, clashes: [] });
+  });
+
+  test('only they watered: their day is kept, also when it is earlier than mine was', () => {
+    const theirs = { ...base, lastWateredOn: '2026-06-01' };
+    expect(mergeFields(base, base, theirs).merged.lastWateredOn).toBe('2026-06-01');
   });
 });

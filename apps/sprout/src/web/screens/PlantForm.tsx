@@ -6,6 +6,7 @@ import {
   validatePlantFields,
   type FieldErrors,
 } from '../../shared/plant.ts';
+import { dayOf } from '../../shared/watering.ts';
 import { errorAttributes, Field } from '../Field.tsx';
 import { LIGHT_LABELS } from '../labels.ts';
 import { Link } from '../Link.tsx';
@@ -49,6 +50,8 @@ export function PlantForm({ plantId }: PlantFormProps) {
       name,
       light,
       wateringIntervalDays: interval.trim() === '' ? undefined : Number(interval),
+      // The form does not show it: an edit keeps the plant's day, a new plant was watered today.
+      lastWateredOn: plant?.lastWateredOn ?? dayOf(new Date()),
     });
     setErrors(validation.ok ? {} : validation.errors);
     if (!validation.ok) return;

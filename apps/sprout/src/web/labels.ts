@@ -15,6 +15,7 @@ export const FIELD_LABELS: Record<keyof PlantFields, string> = {
   name: 'Name',
   light: 'Light',
   wateringIntervalDays: 'Watering interval',
+  lastWateredOn: 'Last watered',
 };
 
 /** A field's value as a person reads it, for example "Direct sun" or "7 days". */

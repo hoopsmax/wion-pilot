@@ -4,7 +4,7 @@ import { bodyOf, sendError } from './http.ts';
 import { verifyPassword } from './passwords.ts';
 import { plantRoutes } from './plant-routes.ts';
 import type { Sessions } from './sessions.ts';
-import { readSproutData, type Store } from './store.ts';
+import { readSeed, type Store } from './store.ts';
 
 export interface AppOptions {
   store: Store;
@@ -62,7 +62,7 @@ export function createApp({
 
   if (testMode) {
     app.post('/api/test/reset', async (_req, res) => {
-      await store.replaceAll(await readSproutData(seedFile));
+      await store.replaceAll(await readSeed(seedFile));
       sessions.endAll();
       res.status(204).end();
     });

@@ -2,5 +2,8 @@
   "name": "@wion-pilot/core",
   "private": true,
   "description": "Wion-Pilot's core: report (bug-report drafts) today; map, teach and draft later.",
-  "type": "module"
+  "type": "module",
+  "dependencies": {
+    "@anthropic-ai/sdk": "1.8.0"
+  }
 }

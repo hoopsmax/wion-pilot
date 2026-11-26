@@ -6,6 +6,7 @@ const fields = (name: string, days = 4): PlantFields => ({
   name,
   light: 'medium',
   wateringIntervalDays: days,
+  lastWateredOn: '2026-06-10',
 });
 
 const fern: Plant = {

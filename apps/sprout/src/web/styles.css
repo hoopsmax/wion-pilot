@@ -141,6 +141,29 @@ button:disabled {
   color: var(--muted);
 }
 
+.reminder {
+  margin: 0.3rem 0 0;
+  font-size: 0.92rem;
+  font-weight: 600;
+}
+
+.reminder-later {
+  color: var(--green);
+}
+
+.reminder-due {
+  color: #7a4b00;
+}
+
+.reminder-overdue {
+  color: var(--error);
+}
+
+.row-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
 .sync-banner {
   padding: 0.6rem 1rem;
   text-align: center;

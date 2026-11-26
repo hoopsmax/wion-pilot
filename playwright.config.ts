@@ -2,10 +2,21 @@ import { join } from 'node:path';
 import { defineConfig, devices } from '@playwright/test';
 import { defineBddConfig } from 'playwright-bdd';
 
-const testDir = defineBddConfig({
-  features: 'tests/features/**/*.feature',
-  steps: ['tests/steps/**/*.ts', 'tests/features/**/*.steps.ts', 'tests/fixtures/**/*.ts'],
-});
+// `wion draft` checks an AI proposal in its own folder, against the shared step library only
+// (tests/steps), so drafts reuse generic steps and the real suite's generated files stay untouched.
+const draftCheckFolder = process.env['WION_DRAFT_CHECK'];
+
+const testDir = draftCheckFolder
+  ? defineBddConfig({
+      features: join(draftCheckFolder, '*.feature'),
+      featuresRoot: draftCheckFolder,
+      steps: ['tests/steps/**/*.ts', 'tests/fixtures/**/*.ts'],
+      outputDir: join(draftCheckFolder, '.features-gen'),
+    })
+  : defineBddConfig({
+      features: 'tests/features/**/*.feature',
+      steps: ['tests/steps/**/*.ts', 'tests/features/**/*.steps.ts', 'tests/fixtures/**/*.ts'],
+    });
 
 // The suite runs its own Sprout on its own port and data file, so `npm run demo` and its
 // data are never touched, and every run starts from the seed data.

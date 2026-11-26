@@ -1,11 +1,12 @@
 import { createBdd, test as base } from 'playwright-bdd';
 import type { Plant } from '../../apps/sprout/src/shared/plant.ts';
+import { dayOf } from '../../apps/sprout/src/shared/watering.ts';
 import type { BrowserLog } from '../../packages/core/src/report/bug-report-reporter.ts';
 import { Person } from '../pages/person.ts';
 import { attachIfFailed, recordBrowserLog } from './browser-log.ts';
 import { personNamed } from './people.ts';
 import { SproutApi, testPlantName } from './sprout-api.ts';
-import type { MapRun } from './wion-cli.ts';
+import type { MapRun, WionRun } from './wion-cli.ts';
 
 interface People {
   /** The person with this name, each in their own browser; opened on first use. */
@@ -16,6 +17,10 @@ interface People {
 export interface ScenarioState {
   /** A plant the scenario added through the form, with the light level it was given. */
   newPlant?: { name: string; light: string };
+  /** The day the scenario treats as today (see "it is … on …'s device"). */
+  today?: string;
+  /** The last run of another wion command (draft, review). */
+  wionRun?: WionRun;
   /** The last run of wion map. */
   mapRun?: MapRun;
   /** Sprout's own plants (not test data) before something happened. */
@@ -76,6 +81,7 @@ export const test = base.extend<Fixtures>({
       name: testPlantName(),
       light: 'medium',
       wateringIntervalDays: 7,
+      lastWateredOn: dayOf(new Date()),
     });
     await use(plant);
     await api.deletePlant(plant.id);

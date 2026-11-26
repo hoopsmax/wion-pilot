@@ -1,0 +1,35 @@
+{
+  "feature": "watering-reminders-extra",
+  "title": "More watering reminders",
+  "description": "Extra reminder checks.",
+  "changeSummary": "",
+  "testPlan": ["A plant watered today"],
+  "scenarios": [
+    {
+      "name": "A plant watered today waits a whole interval",
+      "steps": [
+        "Given it is \"2026-06-15\" on Ava's device",
+        "And a test plant exists",
+        "And the test plant is watered every 5 days and was last watered 0 days ago",
+        "And Ava is signed in",
+        "Then Ava sees the test plant marked \"Water in 5 days\""
+      ]
+    },
+    {
+      "name": "A long-forgotten plant",
+      "steps": [
+        "Given it is \"2026-06-15\" on Ava's device",
+        "And a test plant exists",
+        "And the test plant is watered every 2 days and was last watered 30 days ago",
+        "And Ava is signed in",
+        "Then Ava sees the test plant marked \"28 days overdue\""
+      ]
+    }
+  ],
+  "missingSteps": [
+    {
+      "phrase": "Ava sorts plants by due date",
+      "purpose": "The list has no sorting yet."
+    }
+  ]
+}

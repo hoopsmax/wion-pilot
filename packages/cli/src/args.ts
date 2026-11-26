@@ -1,20 +1,35 @@
-import { parseArgs } from 'node:util';
+import { parseArgs, type ParseArgsConfig } from 'node:util';
 
-export const USAGE = `Usage: wion map <url> [options]
+export const USAGE = `Usage:
+  wion map <url> [options]            Map a web app's screens, fields and locators
+  wion draft [topic] [options]        Let an AI draft BDD scenarios for review
+  wion review [options]               Approve or reject drafted scenarios
 
-Maps a web app: its screens, forms, buttons and links, with a Playwright locator for each.
-It opens pages by their address and never clicks or submits, apart from signing in.
-
-Options:
+wion map: opens pages by their address and never clicks or submits, apart from signing in.
   --max-pages <n>       Open at most n pages (default 30)
   --max-depth <n>       Follow links at most n steps from the start (default 3)
   --allow-domain <host> Also follow links to this host (repeat for more)
   --out <folder>        Where to write the map (default .wion/map)
   --config <file>       Sign-in settings (default wion.config.json, if it exists)
+
+wion draft: give a topic, a code change, or both. Nothing enters tests/features without review.
+  --diff <base>         Draft from the app's code change since <base> (a branch or commit)
+  --provider <name>     none (default: prints the prompt), ollama or claude
+  --model <name>        The model (claude: claude-opus-5-5; ollama: llama3.1)
+  --answer <file>       Use an answer pasted from a chat instead of calling a provider
+
+wion review:
+  --features-dir <dir>  Where approved scenarios go (default tests/features)
+
+wion draft and review:
+  --wion-dir <dir>      Where the map, prompts, proposals and ledger are (default .wion)
+
   -h, --help            Show this help
 
-Example:
+Examples:
   SPROUT_PASSWORD=sprout-ava wion map http://localhost:4600
+  wion draft "watering reminders" --diff main --provider claude
+  wion review
 `;
 
 /** Wrong use of the command: the message is shown together with the usage. */
@@ -31,7 +46,27 @@ export interface MapArgs {
   configPath: string | undefined;
 }
 
-export type CliArgs = { command: 'help' } | MapArgs;
+export const PROVIDERS = ['none', 'ollama', 'claude'] as const;
+export type ProviderName = (typeof PROVIDERS)[number];
+
+export interface DraftArgs {
+  command: 'draft';
+  topic: string | undefined;
+  diffBase: string | undefined;
+  provider: ProviderName;
+  model: string | undefined;
+  answerFile: string | undefined;
+  /** Where wion keeps its map, prompts, proposals and ledger (default .wion). */
+  wionDir: string;
+}
+
+export interface ReviewArgs {
+  command: 'review';
+  featuresDir: string;
+  wionDir: string;
+}
+
+export type CliArgs = { command: 'help' } | MapArgs | DraftArgs | ReviewArgs;
 
 export const DEFAULT_CONFIG = 'wion.config.json';
 
@@ -59,7 +94,7 @@ function httpUrl(value: string): string {
   return url.href;
 }
 
-const OPTIONS = {
+const MAP_OPTIONS = {
   'max-pages': { type: 'string' },
   'max-depth': { type: 'string' },
   'allow-domain': { type: 'string', multiple: true },
@@ -68,21 +103,41 @@ const OPTIONS = {
   help: { type: 'boolean', short: 'h' },
 } as const;
 
-/** Turns the command line into what to do; wrong use throws a UsageError that says what is wrong. */
-export function parseCliArgs(
-  argv: string[],
-  defaults: { maxPages: number; maxDepth: number },
-): CliArgs {
-  let parsed;
+const DRAFT_OPTIONS = {
+  diff: { type: 'string' },
+  provider: { type: 'string' },
+  model: { type: 'string' },
+  answer: { type: 'string' },
+  'wion-dir': { type: 'string' },
+  help: { type: 'boolean', short: 'h' },
+} as const;
+
+const REVIEW_OPTIONS = {
+  'features-dir': { type: 'string' },
+  'wion-dir': { type: 'string' },
+  help: { type: 'boolean', short: 'h' },
+} as const;
+
+/** Node's parseArgs, with its errors turned into usage errors. */
+function parse<T extends ParseArgsConfig>(config: T): ReturnType<typeof parseArgs<T>> {
   try {
-    parsed = parseArgs({ args: argv, options: OPTIONS, allowPositionals: true });
+    return parseArgs(config);
   } catch (error) {
     throw new UsageError((error as Error).message, { cause: error });
   }
-  const { values, positionals } = parsed;
-  if (values.help || positionals.length === 0) return { command: 'help' };
-  const [command, url, ...extra] = positionals;
-  if (command !== 'map') throw new UsageError(`Unknown command "${String(command)}".`);
+}
+
+function mapArgs(
+  argv: string[],
+  defaults: { maxPages: number; maxDepth: number },
+): MapArgs | { command: 'help' } {
+  const { values, positionals } = parse({
+    args: argv,
+    options: MAP_OPTIONS,
+    allowPositionals: true,
+  });
+  if (values.help) return { command: 'help' };
+  const [url, ...extra] = positionals;
   if (url === undefined) throw new UsageError('wion map needs the URL of the app to map.');
   if (extra.length > 0) throw new UsageError(`Unexpected arguments: ${extra.join(' ')}.`);
   return {
@@ -94,4 +149,67 @@ export function parseCliArgs(
     outDir: values.out ?? '.wion/map',
     configPath: values.config,
   };
+}
+
+function providerName(value: string | undefined): ProviderName {
+  if (value === undefined) return 'none';
+  const known = PROVIDERS.find((name) => name === value);
+  if (!known) throw new UsageError(`Unknown provider "${value}". Use ${PROVIDERS.join(', ')}.`);
+  return known;
+}
+
+function draftArgs(argv: string[]): DraftArgs | { command: 'help' } {
+  const { values, positionals } = parse({
+    args: argv,
+    options: DRAFT_OPTIONS,
+    allowPositionals: true,
+  });
+  if (values.help) return { command: 'help' };
+  // A topic of several words works with or without quotes.
+  const topic = positionals.join(' ').trim() || undefined;
+  const provider = providerName(values.provider);
+  if (values.answer !== undefined && provider !== 'none') {
+    throw new UsageError('--answer replaces the provider call; leave out --provider.');
+  }
+  if (topic === undefined && values.diff === undefined && values.answer === undefined) {
+    throw new UsageError('wion draft needs a topic, --diff <base>, or both.');
+  }
+  return {
+    command: 'draft',
+    topic,
+    diffBase: values.diff,
+    provider,
+    model: values.model,
+    answerFile: values.answer,
+    wionDir: values['wion-dir'] ?? '.wion',
+  };
+}
+
+function reviewArgs(argv: string[]): ReviewArgs | { command: 'help' } {
+  const { values, positionals } = parse({
+    args: argv,
+    options: REVIEW_OPTIONS,
+    allowPositionals: true,
+  });
+  if (values.help) return { command: 'help' };
+  if (positionals.length > 0)
+    throw new UsageError(`Unexpected arguments: ${positionals.join(' ')}.`);
+  return {
+    command: 'review',
+    featuresDir: values['features-dir'] ?? 'tests/features',
+    wionDir: values['wion-dir'] ?? '.wion',
+  };
+}
+
+/** Turns the command line into what to do; wrong use throws a UsageError that says what is wrong. */
+export function parseCliArgs(
+  argv: string[],
+  defaults: { maxPages: number; maxDepth: number },
+): CliArgs {
+  const [command, ...rest] = argv;
+  if (command === undefined || command === '--help' || command === '-h') return { command: 'help' };
+  if (command === 'map') return mapArgs(rest, defaults);
+  if (command === 'draft') return draftArgs(rest);
+  if (command === 'review') return reviewArgs(rest);
+  throw new UsageError(`Unknown command "${command}".`);
 }

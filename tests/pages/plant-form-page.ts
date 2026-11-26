@@ -21,7 +21,8 @@ export class PlantFormPage {
     this.name = page.getByLabel('Name', { exact: true });
     this.light = page.getByLabel('Light', { exact: true });
     this.interval = page.getByLabel('Watering interval (days)', { exact: true });
-    this.save = page.getByRole('button', { name: 'Save' });
+    // Exact: the conflict screen's "Save my choices" must not count as this form's Save button.
+    this.save = page.getByRole('button', { name: 'Save', exact: true });
     this.cancel = page.getByRole('link', { name: 'Cancel' });
   }
 
