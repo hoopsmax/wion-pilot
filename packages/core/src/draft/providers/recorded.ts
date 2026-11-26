@@ -1,5 +1,4 @@
 import { readFile } from 'node:fs/promises';
-import { parseAnswerText } from '../answer.ts';
 import type { Provider } from './provider.ts';
 
 /**
@@ -18,7 +17,7 @@ export function recordedProvider(answerFile: string): Provider {
         throw new Error(`Cannot read the answer file ${answerFile}.`, { cause: error });
       }
       return {
-        answer: parseAnswerText(text),
+        text,
         model: 'recorded',
         usage: { inputTokens: 0, outputTokens: 0 },
       };

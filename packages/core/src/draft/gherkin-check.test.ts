@@ -4,7 +4,7 @@ import { join } from 'node:path';
 import { describe, expect, test } from 'vitest';
 import type { DraftAnswer } from './answer.ts';
 import { checkDraft, missingStepsIn } from './check.ts';
-import { toGherkin } from './gherkin.ts';
+import { approvedHeader, toGherkin } from './gherkin.ts';
 import { listProposals, saveProposal, type ProposalMeta } from './proposals.ts';
 
 const repoRoot = join(import.meta.dirname, '..', '..', '..', '..');
@@ -61,6 +61,16 @@ describe('toGherkin', () => {
   });
 });
 
+describe('approved features', () => {
+  test('an approved feature names its origin and the approval day instead of "not approved"', () => {
+    const text = toGherkin(answer, origin, approvedHeader(origin, '2026-11-27'));
+    expect(text.split('\n')[0]).toBe(
+      '# Drafted by recorded/test on 2026-11-26, approved with wion review on 2026-11-27.',
+    );
+    expect(text).not.toContain('Not approved yet');
+  });
+});
+
 describe('missingStepsIn', () => {
   test('reads the missing steps from bddgen output', () => {
     const output =
@@ -110,7 +120,7 @@ describe('proposals', () => {
       diffBase: undefined,
       createdAt: '2026-11-26T10:00:00.000Z',
       check: { ok: true },
-      missingSteps: [],
+      answer,
     };
     try {
       expect(await listProposals(join(folder, 'none-yet'))).toEqual([]);

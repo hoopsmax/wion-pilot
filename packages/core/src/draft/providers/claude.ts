@@ -3,7 +3,7 @@ import type {
   BetaMessage,
   MessageCreateParamsNonStreaming,
 } from '@anthropic-ai/sdk/resources/beta/messages/messages';
-import { ANSWER_SCHEMA, parseAnswerText } from '../answer.ts';
+import { ANSWER_SCHEMA } from '../answer.ts';
 import type { Provider } from './provider.ts';
 
 export const CLAUDE_DEFAULT_MODEL = 'claude-opus-5-5';
@@ -84,7 +84,7 @@ export function claudeProvider({
         throw new Error('The answer was cut off at its length limit. Draft a narrower topic.');
       }
       return {
-        answer: parseAnswerText(textOf(message)),
+        text: textOf(message),
         model: message.model,
         usage: {
           inputTokens: message.usage.input_tokens,

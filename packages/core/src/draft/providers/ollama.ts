@@ -1,4 +1,4 @@
-import { ANSWER_SCHEMA, parseAnswerText } from '../answer.ts';
+import { ANSWER_SCHEMA } from '../answer.ts';
 import type { Provider } from './provider.ts';
 
 export const OLLAMA_DEFAULT_URL = 'http://localhost:11434';
@@ -61,7 +61,7 @@ export function ollamaProvider({
         );
       }
       return {
-        answer: parseAnswerText(reply.message?.content ?? ''),
+        text: reply.message?.content ?? '',
         model: reply.model ?? model,
         usage: { inputTokens: reply.prompt_eval_count ?? 0, outputTokens: reply.eval_count ?? 0 },
       };

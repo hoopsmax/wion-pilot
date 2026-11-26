@@ -14,7 +14,8 @@ export interface ProposalMeta {
   diffBase: string | undefined;
   createdAt: string;
   check: CheckResult;
-  missingSteps: DraftAnswer['missingSteps'];
+  /** The checked answer, so review can write the approved scenarios without re-reading Gherkin. */
+  answer: DraftAnswer;
 }
 
 export interface SavedProposal {

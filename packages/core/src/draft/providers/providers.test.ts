@@ -60,7 +60,7 @@ describe('claude', () => {
       messages: [{ role: 'user', content: 'WHAT TO TEST' }],
     });
     expect(reply).toEqual({
-      answer,
+      text: JSON.stringify(answer),
       model: 'claude-opus-5-5',
       usage: { inputTokens: 1200, outputTokens: 300 },
     });
@@ -109,7 +109,7 @@ describe('ollama', () => {
     const reply = await ollamaProvider({ model: 'llama3.1', fetchFn }).draft(prompt);
     expect(body).toMatchObject({ model: 'llama3.1', stream: false, format: ANSWER_SCHEMA });
     expect(reply).toEqual({
-      answer,
+      text: JSON.stringify(answer),
       model: 'llama3.1',
       usage: { inputTokens: 900, outputTokens: 250 },
     });
@@ -138,7 +138,7 @@ describe('recorded and none', () => {
       await writeFile(file, `Sure!\n\`\`\`json\n${JSON.stringify(answer)}\n\`\`\``);
       const provider = recordedProvider(file);
       expect(provider.callsAModel).toBe(false);
-      expect((await provider.draft(prompt)).answer).toEqual(answer);
+      expect((await provider.draft(prompt)).text).toContain(JSON.stringify(answer));
       await expect(recordedProvider(join(folder, 'missing')).draft(prompt)).rejects.toThrow(
         /Cannot read the answer file/,
       );

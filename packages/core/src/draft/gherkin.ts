@@ -15,6 +15,19 @@ export function draftHeader(origin: DraftOrigin): string {
   return `# Drafted by ${origin.provider}/${origin.model} on ${origin.date}. Not approved yet.`;
 }
 
+/** The first line of an approved feature, or the note above scenarios added to an existing one. */
+export function approvedHeader(origin: DraftOrigin, approvedOn: string): string {
+  return `# Drafted by ${origin.provider}/${origin.model} on ${origin.date}, approved with wion review on ${approvedOn}.`;
+}
+
+export function scenarioLines(scenarios: DraftAnswer['scenarios']): string[] {
+  return scenarios.flatMap((scenario) => [
+    '',
+    `  Scenario: ${oneLine(scenario.name)}`,
+    ...scenario.steps.map((step) => `    ${oneLine(step)}`),
+  ]);
+}
+
 /** A Gherkin keyword or marker at the start of a line would end the description early. */
 const STARTS_LIKE_GHERKIN =
   /^(Feature|Rule|Background|Scenario Outline|Scenario Template|Scenario|Example|Examples|Given|When|Then|And|But)\b|^[*@#|]/;
@@ -36,8 +49,12 @@ function descriptionLines(text: string): string[] {
  * layout. The change summary and test plan become the feature's description; missing steps
  * become comments, since they are not steps yet.
  */
-export function toGherkin(answer: DraftAnswer, origin: DraftOrigin): string {
-  const lines = [draftHeader(origin)];
+export function toGherkin(
+  answer: DraftAnswer,
+  origin: DraftOrigin,
+  header = draftHeader(origin),
+): string {
+  const lines = [header];
   if (answer.missingSteps.length > 0) {
     lines.push('# Missing steps (not used below; a person writes them first):');
     for (const missing of answer.missingSteps) {
@@ -53,9 +70,6 @@ export function toGherkin(answer: DraftAnswer, origin: DraftOrigin): string {
     description.push('', 'Test plan:', ...answer.testPlan.map((item) => `- ${oneLine(item)}`));
   }
   lines.push(...description.map((line) => (line === '' ? '' : `  ${line}`)));
-  for (const scenario of answer.scenarios) {
-    lines.push('', `  Scenario: ${oneLine(scenario.name)}`);
-    lines.push(...scenario.steps.map((step) => `    ${oneLine(step)}`));
-  }
+  lines.push(...scenarioLines(answer.scenarios));
   return `${lines.join('\n')}\n`;
 }

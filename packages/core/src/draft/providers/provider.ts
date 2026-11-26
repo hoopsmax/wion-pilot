@@ -1,10 +1,13 @@
-import type { DraftAnswer } from '../answer.ts';
 import type { Usage } from '../prices.ts';
 import type { Prompt } from '../prompt.ts';
 
-/** What every provider gives back: a checked answer, the model that wrote it, and its tokens. */
+/**
+ * What every provider gives back: the answer's raw text, the model that wrote it, and its tokens.
+ * The text is checked afterwards (parseAnswerText), so a call is logged even when its answer is
+ * unusable.
+ */
 export interface ProviderReply {
-  answer: DraftAnswer;
+  text: string;
   /** The model that answered; with a fallback this can differ from the one asked for. */
   model: string;
   usage: Usage;
