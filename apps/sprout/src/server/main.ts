@@ -31,7 +31,7 @@ const app = createApp({
   testMode,
   webFolder,
 });
-app.listen(port, (error) => {
+const server = app.listen(port, (error) => {
   // Starting Sprout a second time is the usual cause; say so instead of a stack trace.
   if (error && 'code' in error && error.code === 'EADDRINUSE') {
     console.error(
@@ -43,3 +43,8 @@ app.listen(port, (error) => {
   if (error) throw error;
   console.log(`Sprout runs at http://localhost:${String(port)}${testMode ? ' (test mode)' : ''}`);
 });
+// Node drops a request that arrives on a keep-alive connection idle for 6 s (5 s plus a 1 s
+// buffer). Playwright's request client, which the tests use, does not honour the server's
+// "Keep-Alive: timeout=5" hint and reuses such connections. A test that paused about 6 s between
+// two API calls got ECONNRESET. Idle connections now stay open far longer than any test runs.
+server.keepAliveTimeout = 65_000;
