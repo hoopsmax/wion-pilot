@@ -221,5 +221,5 @@ Built in five small steps, each one approved first. The scope was narrowed to th
 
 **Built (M7, step 1):**
 
-- The README is a front page: badges for CI, the license and the live report; a pitch; a quickstart; an architecture diagram (Mermaid, drawn by GitHub); five design decisions, each with what happened in this project; and a note on building it with Claude Code.
+- The README is a front page: badges for CI, the license and the live report; a pitch; a quickstart; an architecture diagram (Mermaid, drawn by GitHub); five design decisions, each with what happened in this project; and a short note on how it was built.
 - The detailed guides moved to `docs/`, one page per area: Sprout, the test suite, bug-report drafts, map, AI drafts and teach.

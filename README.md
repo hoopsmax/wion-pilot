@@ -109,24 +109,9 @@ The code: `packages/core/src/` has one folder per area (`map`, `teach`, `draft`,
 
 **Tests own their data and never wait blindly.** Each scenario creates plants named `wion-test-…` and deletes them afterwards, so the suite runs in parallel and in any order. There are no fixed waits: every step waits for something its action caused. When a test flaked, the cause was fixed, not hidden behind a longer timeout. For example, a conflict scenario once failed in CI because, right after reconnecting, Sprout retried a failed sync only after 10 seconds. It now retries after 1, 2, 4 and 8 seconds.
 
-## Built with Claude Code
+## How it was built
 
-I built Wion-Pilot with [Claude Code](https://claude.com/claude-code), Anthropic's coding agent.
-
-- **My part:**
-  - I set the rules ([CLAUDE.md](CLAUDE.md)) and the roadmap ([PLAN.md](PLAN.md));
-  - before any code was written for a milestone, Claude Code wrote a plan, and I approved or changed it;
-  - I ran each milestone on my own Mac, recorded the teach scenario, reviewed the AI-drafted scenarios with `wion review`, and merged every pull request after CI passed.
-- **Claude Code's part:** it wrote the code, the tests and the docs. Every commit it wrote says so in a `Co-Authored-By` line.
-- **Pace:** milestones 0 to 6 took three days, 25 to 27 November 2026.
-
-What my part caught that the tests alone did not:
-
-- **`wion review` didn't return to the shell.** It passed in CI, but on a real Mac it never gave the terminal back. A test now runs it with the input left open, like a terminal.
-- **The first AI draft failed when run** (see the approval gate above), although it had passed every check.
-- **The test name wasn't recognized.** My first recordings typed `wion test fern` with spaces, so it wasn't treated as test data. The recorder now accepts that spelling, and it warns about anything typed that a test run would leave behind.
-
-Wion-Pilot also uses Claude in a separate way: `wion draft --provider claude` calls the Claude API. That is how the scenarios in `tests/features/watering-reminders/` were drafted, before I approved them.
+I built Wion-Pilot with Claude Code, Anthropic's coding agent: I set the rules ([CLAUDE.md](CLAUDE.md)) and the roadmap ([PLAN.md](PLAN.md)), approved every plan, and ran and checked each milestone myself.
 
 ## Commands
 
