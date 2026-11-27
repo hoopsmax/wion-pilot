@@ -218,3 +218,8 @@ Built in five small steps, each one approved first. The scope was narrowed to th
   - an honest note on building it with Claude Code
 - Badges for CI and the license, plus a link to the live report on GitHub Pages.
 - **Resume and LinkedIn:** add Wion-Pilot only once M0–M3 are public and green.
+
+**Built (M7, step 1):**
+
+- The README is a front page: badges for CI, the license and the live report; a pitch; a quickstart; an architecture diagram (Mermaid, drawn by GitHub); five design decisions, each with what happened in this project; and a note on building it with Claude Code.
+- The detailed guides moved to `docs/`, one page per area: Sprout, the test suite, bug-report drafts, map, AI drafts and teach.
