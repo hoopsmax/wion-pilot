@@ -111,7 +111,7 @@ The code: `packages/core/src/` has one folder per area (`map`, `teach`, `draft`,
 
 **No AI by default.** The default provider is `none`: wion writes the prompt to a file that you can paste into any chat. It costs nothing and sends nothing anywhere. Ollama keeps everything on your computer, and Claude is opt-in, with a key in `.env`. With any provider, the prompt is redacted first (email addresses and secrets), and every call is logged.
 
-**Tests own their data and never wait blindly.** Each scenario creates plants named `wion-test-…` and deletes them afterwards, so the suite runs in parallel and in any order. There are no fixed waits: every step waits for something its action caused. When a test flaked, the cause was fixed, not hidden behind a longer timeout. For example, a conflict scenario once failed in CI because, right after reconnecting, Sprout retried a failed sync only after 10 seconds. It now retries after 1, 2, 4 and 8 seconds.
+**Tests own their data and never wait blindly.** Each scenario creates plants named `wion-test-…` and deletes them afterwards, so the suite runs in parallel and in any order. There are no fixed waits: every step waits for something its action caused. When a test flaked, the cause was found and fixed, not hidden behind a longer timeout. For example, a conflict scenario failed in CI now and then. The screenshots of one failure showed the two changes reaching the server in the wrong order. The test's save step waited for the Save button to go, but the app only renames it "Saving…", so the test went on before the change was even queued. With the save slowed down on purpose, the old step failed 5 times out of 5, and the fixed one passed every time.
 
 ## How it was built
 

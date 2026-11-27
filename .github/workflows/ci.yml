@@ -59,6 +59,18 @@ jobs:
           path: reports/bugs/
           if-no-files-found: ignore
           retention-days: 14
+      - name: Show what failed in the log
+        # The log can be read at once, also where downloading artifacts is not possible: each
+        # draft (steps, console errors, failed requests) and what the page showed. The test
+        # server's throwaway session tokens are hidden all the same.
+        if: ${{ failure() }}
+        run: |
+          for file in reports/bugs/*.md test-results/*/error-context.md; do
+            [ -f "$file" ] || continue
+            echo "::group::$file"
+            sed -E 's/(Bearer )[A-Za-z0-9._-]+/\1<hidden>/g' "$file"
+            echo "::endgroup::"
+          done
       - name: Prepare the report for GitHub Pages
         if: ${{ !cancelled() && github.event_name == 'push' && github.ref == 'refs/heads/main' }}
         uses: actions/upload-pages-artifact@v5

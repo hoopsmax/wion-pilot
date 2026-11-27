@@ -13,6 +13,6 @@ A draft contains:
 - the browser console errors and failed network requests of everyone in the test (Ava and Ben)
 - the full error, and a "Notes" section for anything the reporter could not find out
 
-Passing tests write nothing, and each run starts with an empty `reports/bugs/`. In CI the drafts of a failing run are attached as the `bug-report-drafts` artifact, and the "Bug-report demo" job checks on every push that `npm run demo:bug` still produces a complete draft.
+Passing tests write nothing, and each run starts with an empty `reports/bugs/`. In CI the drafts of a failing run are attached as the `bug-report-drafts` artifact. They are also printed in the E2E job's log, together with what the page showed when the test failed, so a failure can be read without downloading anything. The "Bug-report demo" job checks on every push that `npm run demo:bug` still produces a complete draft.
 
 The reporter lives in `packages/core/src/report/`, the first part of Wion-Pilot itself.
