@@ -79,6 +79,19 @@ describe('stepsFor', () => {
     ]);
   });
 
+  test('typed text without the test prefix is noted: it would be left behind', () => {
+    const typedWithSpaces: RecordedAction[] = [
+      { kind: 'click', name: 'Add plant' },
+      { kind: 'fill', label: 'Name', value: 'wion test fern' },
+      { kind: 'click', name: 'Save' },
+      { kind: 'see', text: 'wion test fern' },
+    ];
+    expect(stepsFor(typedWithSpaces, { person: 'Ava' }).notes).toEqual([
+      'Nothing typed starts with wion-test-: if this scenario creates something, every test run leaves it behind. Type a name like wion-test-fern.',
+    ]);
+    expect(stepsFor(addPlant, { person: 'Ava' }).notes).toEqual([]);
+  });
+
   test('a text with double quotes is quoted with single quotes', () => {
     const steps = stepsFor([{ kind: 'see', text: 'Say "hi"' }], { person: 'Ava' }).steps;
     expect(steps).toEqual([`Then Ava sees 'Say "hi"'`]);

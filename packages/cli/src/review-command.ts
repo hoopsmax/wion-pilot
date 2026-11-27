@@ -63,6 +63,12 @@ function introduce(proposal: Proposal, io: ReviewIo): void {
   if (meta.diffBase) io.log(`   From the code change since: ${meta.diffBase}`);
   if (meta.answer.changeSummary) io.log(`   What changed: ${meta.answer.changeSummary}`);
   for (const item of meta.answer.testPlan) io.log(`   Plan: ${item}`);
+  // A recording's notes (no check, nothing typed as test data, …) are in its description.
+  if (meta.provider === TEACH_PROVIDER) {
+    for (const line of meta.answer.description.split('\n')) {
+      if (line.startsWith('- ')) io.log(`   Note: ${line.slice(2)}`);
+    }
+  }
   for (const missing of meta.answer.missingSteps) {
     io.log(`   Missing step (not used): "${missing.phrase}": ${missing.purpose}`);
   }

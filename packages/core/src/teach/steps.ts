@@ -159,5 +159,13 @@ export function stepsFor(actions: RecordedAction[], options: RecordingOptions): 
   if (checks === 0) {
     notes.push('No check was recorded: Option+click (Alt+click) a text to check that it is shown.');
   }
+  // Typed text without the prefix is kept as typed: a plant named "Fern" would be created by
+  // every test run and never deleted.
+  if (testName === undefined && merged.some((action) => action.kind === 'fill')) {
+    notes.push(
+      `Nothing typed starts with ${prefix}: if this scenario creates something, every test run ` +
+        `leaves it behind. Type a name like ${prefix}fern.`,
+    );
+  }
   return { steps, notes };
 }
