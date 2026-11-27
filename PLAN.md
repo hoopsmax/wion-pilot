@@ -206,7 +206,7 @@ Built in five small steps, each one approved first. The scope was narrowed to th
 - The recorder (`packages/core/src/teach/`): a script in the page reports clicks, typing, list choices and Option/Alt+clicks (checks); passwords are never recorded; what cannot become a step becomes a note. Tested in a real browser in CI, with Playwright playing Ava.
 - `wion teach <url> "<scenario>"`: a visible browser, signed in from `wion.config.json`; Enter finishes, Ctrl+C cancels; the recording goes through the `bddgen` check and `wion review` like an AI draft, tagged `@recorded`.
 - **The real run:** recording "Adding a plant by clicking" on the maintainer's Mac runs green without edits (`tests/features/adding-a-plant-by-clicking/`). Two earlier takes taught three fixes: a note when typed text is not test data, review shows a recording's notes, and "wion test fern" with spaces counts as test data.
-- Found on the way: the test cleanup could miss a plant that reached the server late (it now waits for sync), the recorder's stop could miss the last action, and Sprout waited 10 seconds to retry a failed sync right after reconnecting (now 1, 2, 4, 8 seconds), which had made a conflict scenario flaky in CI.
+- Found on the way: the test cleanup could miss a plant that reached the server late (it now waits for sync), the recorder's stop could miss the last action, and Sprout waited 10 seconds to retry a failed sync right after reconnecting (now 1, 2, 4, 8 seconds).
 
 ### M7: Portfolio polish (ongoing)
 
@@ -237,3 +237,14 @@ Built in five small steps, each one approved first. The scope was narrowed to th
 - The text for the repository's "About" box: a description, the live report as its website, and ten topics. The maintainer sets it in GitHub's settings, because this cloud session may not change repository settings.
 - A 1280×640 link preview image, built from two GIF frames, for Settings → General → Social preview. It is not kept in the repo.
 - With this, M7 is done. Polish can continue as needed.
+
+**Fixed after M7:**
+
+- **The flaky conflict scenario** ("Ava edited offline while Ben edited online"):
+  - **Cause:** the test's save step waited for the Save button to go. The app only renames it "Saving…", so the step ended before the change was queued, and Ava's change could reach the server before Ben's.
+  - **Proof:** with the save slowed down on purpose, the old step failed 5 times out of 5, and the fixed step passed 5 times out of 5.
+  - **The M6 retry fix:** in M6 the flake was put down to Sprout's slow retry. That fix still stands on its own, with its own scenario.
+- **ECONNRESET in the tests' API calls:**
+  - **Cause:** Node drops a request on a keep-alive connection that has been idle for 6 seconds, and Playwright's request client reuses such connections.
+  - **Fix:** Sprout now keeps idle connections open for 65 seconds.
+- **E2E failures in CI:** the job's log now shows each bug-report draft and what the page showed.
