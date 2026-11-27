@@ -6,7 +6,7 @@ You point Wion-Pilot at a web app, and it maps the screens. Then you build tests
 
 ## Status
 
-Milestones 0 to 5 of the [roadmap](PLAN.md) are done:
+Milestones 0 to 6 of the [roadmap](PLAN.md) are done:
 
 - **M0:** the tooling (strict TypeScript, ESLint and Prettier, Vitest, Playwright with playwright-bdd, CI on GitHub Actions)
 - **M1:** **Sprout**, the demo app that Wion-Pilot tests
@@ -14,10 +14,11 @@ Milestones 0 to 5 of the [roadmap](PLAN.md) are done:
 - **M3:** a bug-report draft for every failing test ([example](docs/example-bug-report.md))
 - **M4:** `wion map`, which maps an app's screens, form fields and locators
 - **M5:** `wion draft` and `wion review`: an AI drafts BDD scenarios from a topic or a code change, and a person approves each one
+- **M6:** `wion teach`: click through the app, and each action becomes a step of a scenario that a person then approves
 
 The latest test report from `main` is published at **https://hoopsmax.github.io/wion-pilot/**.
 
-Next is M6: teach mode, which turns clicks in the app into Gherkin steps.
+Next is M7: portfolio polish.
 
 ## Sprout, the demo app
 
@@ -114,6 +115,7 @@ The features are written in plain language (Gherkin) and run on Playwright:
 | `reminders` | Each reminder wording, marking a plant watered (also offline), with "today" fixed by Playwright's clock so dates never flake. |
 | `watering-reminders` | Five scenarios drafted by Claude with `wion draft --diff main` and approved with `wion review` (two people watering, editing keeps the day, a new plant, sign-out blocked). Two needed a missing step added by hand; the file says which. |
 | `conflict` | Ava and Ben in two browsers: different fields are combined, equal values are no conflict, and only clashing fields are asked about, also after working offline or while typing. |
+| `adding-a-plant-by-clicking` | The first scenario recorded with `wion teach` (tagged `@recorded`), approved with `wion review`, unchanged since. |
 | `teach` | The recorder in a real browser, with Playwright playing Ava: clicks, typing and checks become steps, the test name becomes `{new name}`, a password is never recorded; and the `wion teach` command itself. |
 | `draft` | `wion draft` and `wion review` on saved answers: a good answer becomes a proposal, a made-up step is refused, only approved scenarios are written, and the prompt has personal data removed. |
 | `map` | `wion map` finds every screen and form field of Sprout with a locator for each, changes no data, and explains a wrong password or an app that is not running. |

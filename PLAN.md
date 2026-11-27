@@ -200,6 +200,14 @@ Built in five small steps, each one approved first. The scope was narrowed to th
 
 **Done when:** recording "add a plant" gives a scenario that runs green without edits.
 
+**Built (M6):**
+
+- Generic steps in the shared library (`Ava clicks "…"`, `fills "…" with "…"`, `chooses "…" in "…"`, `sees "…"`), by the names a person sees, with `{new name}` for one fresh `wion-test-…` name per scenario.
+- The recorder (`packages/core/src/teach/`): a script in the page reports clicks, typing, list choices and Option/Alt+clicks (checks); passwords are never recorded; what cannot become a step becomes a note. Tested in a real browser in CI, with Playwright playing Ava.
+- `wion teach <url> "<scenario>"`: a visible browser, signed in from `wion.config.json`; Enter finishes, Ctrl+C cancels; the recording goes through the `bddgen` check and `wion review` like an AI draft, tagged `@recorded`.
+- **The real run:** recording "Adding a plant by clicking" on the maintainer's Mac runs green without edits (`tests/features/adding-a-plant-by-clicking/`). Two earlier takes taught three fixes: a note when typed text is not test data, review shows a recording's notes, and "wion test fern" with spaces counts as test data.
+- Found on the way: the test cleanup could miss a plant that reached the server late (it now waits for sync), the recorder's stop could miss the last action, and Sprout waited 10 seconds to retry a failed sync right after reconnecting (now 1, 2, 4, 8 seconds), which had made a conflict scenario flaky in CI.
+
 ### M7: Portfolio polish (ongoing)
 
 - **README:**
