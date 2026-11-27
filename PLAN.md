@@ -231,3 +231,9 @@ Built in five small steps, each one approved first. The scope was narrowed to th
   - `wion teach` on a virtual screen, with Playwright playing the person in the command's own browser. It recorded the same seven steps as the maintainer's recording;
   - `wion draft` with Claude (5,840 in / 3,044 out tokens, about $0.08), then `wion review`, run on the maintainer's Mac so the key stayed there.
 - The terminal windows are drawn from the commands' captured output. Only the prompt is drawn, and the home folder is shown as `~`. The GIF was made with ffmpeg, which is not a project dependency.
+
+**Built (M7, step 3):**
+
+- The text for the repository's "About" box: a description, the live report as its website, and ten topics. The maintainer sets it in GitHub's settings, because this cloud session may not change repository settings.
+- A 1280×640 link preview image, built from two GIF frames, for Settings → General → Social preview. It is not kept in the repo.
+- With this, M7 is done. Polish can continue as needed.
