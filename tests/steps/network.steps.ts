@@ -6,6 +6,11 @@ Given('{word} goes offline', async ({ people }, name: string) => {
   await person.goOffline();
 });
 
+Given("{word}'s next request to the server will fail", async ({ people }, name: string) => {
+  const person = await people.as(name);
+  await person.failNextServerRequest();
+});
+
 When('{word} goes back online', async ({ people }, name: string) => {
   const person = await people.as(name);
   await person.goOnline();

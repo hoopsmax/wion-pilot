@@ -15,9 +15,8 @@ import { createLocalStore, type LocalState, type LocalStore } from './local-stor
 import type { Conflict } from './conflicts.ts';
 import { changeFor, shownPlants, type ShownPlant, type StartedFrom } from './outbox.ts';
 import { syncOnce } from './sync.ts';
+import { retryDelay, RETRY_EVERY_MS } from './retry.ts';
 import { apiTransport } from './transport.ts';
-
-const RETRY_EVERY_MS = 10_000;
 
 export type SyncStatus = 'offline' | 'syncing' | 'synced';
 
@@ -64,9 +63,16 @@ export function SproutDataProvider({ session, onUnauthorized, children }: Provid
   const [hasSynced, setHasSynced] = useState(false);
   const syncing = useRef(false);
   const syncAgain = useRef(false);
+  // Rounds in a row that could not reach the server although the browser said "online".
+  const failedRounds = useRef(0);
+  const retryTimer = useRef<number | undefined>(undefined);
+  // The latest runSync, for the retry timer (runSync cannot refer to itself).
+  const runSyncRef = useRef<() => Promise<void>>(() => Promise.resolve());
   // Read through a function: a save can set the flag while a round awaits the network,
   // which TypeScript's flow analysis cannot see.
   const anotherRoundWanted = () => syncAgain.current;
+  // Read fresh each time: the connection can change while a round awaits the network.
+  const browserSaysOnline = () => navigator.onLine;
 
   const report = useCallback((error: unknown) => {
     console.error(error);
@@ -114,7 +120,20 @@ export function SproutDataProvider({ session, onUnauthorized, children }: Provid
         setProblem(undefined);
         setOnline(outcome === 'synced');
         if (outcome === 'synced') setHasSynced(true);
-        if (outcome === 'offline') return;
+        if (outcome === 'offline') {
+          // The browser says online but the server was not reached: try again soon, not only
+          // at the regular round (see retry.ts). Truly offline, the 'online' event restarts it.
+          if (browserSaysOnline()) {
+            failedRounds.current += 1;
+            window.clearTimeout(retryTimer.current);
+            retryTimer.current = window.setTimeout(
+              () => void runSyncRef.current(),
+              retryDelay(failedRounds.current),
+            );
+          }
+          return;
+        }
+        failedRounds.current = 0;
       } while (anotherRoundWanted());
     } catch (error) {
       report(error);
@@ -125,6 +144,7 @@ export function SproutDataProvider({ session, onUnauthorized, children }: Provid
   }, [store, session.token, onUnauthorized, report]);
 
   useEffect(() => {
+    runSyncRef.current = runSync;
     void runSync();
     const goOnline = () => {
       setOnline(true);
@@ -141,6 +161,7 @@ export function SproutDataProvider({ session, onUnauthorized, children }: Provid
       window.removeEventListener('online', goOnline);
       window.removeEventListener('offline', goOffline);
       window.clearInterval(timer);
+      window.clearTimeout(retryTimer.current);
     };
   }, [runSync]);
 

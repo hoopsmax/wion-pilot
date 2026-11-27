@@ -77,6 +77,16 @@ export class Person {
     await expect(this.banner.status('Syncing')).toBeHidden();
   }
 
+  /**
+   * Makes this browser's next request to Sprout's API fail as if the connection dropped, as can
+   * happen right after reconnecting: the browser already says "online", the network does not.
+   */
+  async failNextServerRequest(): Promise<void> {
+    await this.page.route('**/api/**', (route) => route.abort('internetdisconnected'), {
+      times: 1,
+    });
+  }
+
   async goOffline(): Promise<void> {
     await this.context.setOffline(true);
     this.#offline = true;
