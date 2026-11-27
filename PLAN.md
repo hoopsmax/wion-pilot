@@ -223,3 +223,11 @@ Built in five small steps, each one approved first. The scope was narrowed to th
 
 - The README is a front page: badges for CI, the license and the live report; a pitch; a quickstart; an architecture diagram (Mermaid, drawn by GitHub); five design decisions, each with what happened in this project; and a short note on how it was built.
 - The detailed guides moved to `docs/`, one page per area: Sprout, the test suite, bug-report drafts, map, AI drafts and teach.
+
+**Built (M7, step 2):**
+
+- A GIF at the top of the README (`docs/media/wion-demo.gif`: 960×625, about 50 seconds, under 1 MB) shows real runs on the demo app:
+  - `wion map`, then its viewer with the locators;
+  - `wion teach` on a virtual screen, with Playwright playing the person in the command's own browser. It recorded the same seven steps as the maintainer's recording;
+  - `wion draft` with Claude (5,840 in / 3,044 out tokens, about $0.08), then `wion review`, run on the maintainer's Mac so the key stayed there.
+- The terminal windows are drawn from the commands' captured output. Only the prompt is drawn, and the home folder is shown as `~`. The GIF was made with ffmpeg, which is not a project dependency.

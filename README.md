@@ -10,6 +10,10 @@ End-to-end tests are slow to write by hand. An AI writes them fast, but not alwa
 
 Everything is shown on **Sprout**, a small made-up plant-care app with the flows that are hardest to test: offline mode, and two people editing the same plant. The [latest test report](https://hoopsmax.github.io/wion-pilot/) from `main` is online.
 
+![wion map, wion teach, and wion draft with wion review, run on the demo app](docs/media/wion-demo.gif)
+
+*Real runs on the demo app, about 50 seconds: `wion map`; `wion teach`, with Playwright playing the person; `wion draft` with Claude, then `wion review`.*
+
 ## What it does
 
 - **Map** (`wion map`): crawls the app and writes down every screen, its form fields and their rules, with a Playwright locator for each button, link and field. It never clicks, types or submits anything apart from signing in. [More](docs/map.md)
