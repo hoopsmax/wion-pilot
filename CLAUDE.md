@@ -44,7 +44,7 @@ Wion-Pilot is an AI-assisted test automation platform for web apps, built with T
 - For anything bigger than a small fix, write a short plan first and wait for my OK.
 - Run `npm run check` before every commit, and `npm test` before pushing.
 - Make small commits with clear messages that say what changed and why.
-- Update README.md whenever setup or behavior changes.
+- Update README.md, and the matching page in `docs/`, whenever setup or behavior changes.
 - When a milestone is done, show me what changed and how to verify it.
 
 ## Commands
