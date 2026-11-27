@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest';
-import { isRecordedAction, stepsFor, type RecordedAction } from './steps.ts';
+import { isRecordedAction, isTestData, stepsFor, type RecordedAction } from './steps.ts';
 
 const ava = { person: 'Ava', given: ['Ava is signed in'] };
 
@@ -79,14 +79,44 @@ describe('stepsFor', () => {
     ]);
   });
 
-  test('typed text without the test prefix is noted: it would be left behind', () => {
+  test('the test prefix typed with spaces counts too, as people type it', () => {
     const typedWithSpaces: RecordedAction[] = [
       { kind: 'click', name: 'Add plant' },
       { kind: 'fill', label: 'Name', value: 'wion test fern' },
       { kind: 'click', name: 'Save' },
       { kind: 'see', text: 'wion test fern' },
     ];
-    expect(stepsFor(typedWithSpaces, { person: 'Ava' }).notes).toEqual([
+    expect(stepsFor(typedWithSpaces, { person: 'Ava' })).toEqual({
+      steps: [
+        'When Ava clicks "Add plant"',
+        'And Ava fills "Name" with "{new name}"',
+        'And Ava clicks "Save"',
+        'Then Ava sees "{new name}"',
+      ],
+      notes: [],
+    });
+  });
+
+  test.each([
+    ['wion-test-fern', true],
+    ['wion test fern', true],
+    ['Wion_Test_fern', true],
+    ['wion  -  test fern', true],
+    ['wiontest fern', false],
+    ['my wion-test-fern', false],
+    ['Fern', false],
+  ])('"%s" is test data: %s', (value, expected) => {
+    expect(isTestData(value, 'wion-test-')).toBe(expected);
+  });
+
+  test('typed text without the test prefix is noted: it would be left behind', () => {
+    const typedPlainName: RecordedAction[] = [
+      { kind: 'click', name: 'Add plant' },
+      { kind: 'fill', label: 'Name', value: 'Kitchen fern' },
+      { kind: 'click', name: 'Save' },
+      { kind: 'see', text: 'Kitchen fern' },
+    ];
+    expect(stepsFor(typedPlainName, { person: 'Ava' }).notes).toEqual([
       'Nothing typed starts with wion-test-: if this scenario creates something, every test run leaves it behind. Type a name like wion-test-fern.',
     ]);
     expect(stepsFor(addPlant, { person: 'Ava' }).notes).toEqual([]);

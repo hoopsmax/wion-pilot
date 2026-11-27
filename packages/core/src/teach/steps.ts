@@ -47,6 +47,20 @@ export function isRecordedAction(value: unknown): value is RecordedAction {
   return Object.entries(action).every(([, field]) => typeof field === 'string');
 }
 
+/**
+ * Whether a typed value is test data. People type the prefix in different ways, so "wion-test-",
+ * "wion test " and "Wion_Test_" all count: the words of the prefix in order, any separators, any case.
+ */
+export function isTestData(value: string, prefix: string): boolean {
+  const words = prefix
+    .split(/[-_\s]+/)
+    .filter((word) => word !== '')
+    .map((word) => word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
+  const separator = '[-_\\s]+';
+  const trailing = /[-_\s]$/.test(prefix) ? separator : '';
+  return new RegExp(`^${words.join(separator)}${trailing}`, 'i').test(value);
+}
+
 /** Typing fires an event per key; only the text the field ended with is a step. */
 function mergeTyping(actions: RecordedAction[]): RecordedAction[] {
   const merged: RecordedAction[] = [];
@@ -121,7 +135,7 @@ export function stepsFor(actions: RecordedAction[], options: RecordingOptions): 
   const prefix = options.testDataPrefix ?? TEST_DATA_PREFIX;
   const merged = mergeTyping(actions);
   const typedTestNames = merged.flatMap((action) =>
-    action.kind === 'fill' && action.value.startsWith(prefix) ? [action.value] : [],
+    action.kind === 'fill' && isTestData(action.value, prefix) ? [action.value] : [],
   );
   const [testName, ...otherTestNames] = [...new Set(typedTestNames)];
   const notes = otherTestNames.map(

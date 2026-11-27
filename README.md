@@ -239,7 +239,7 @@ A Chromium window opens, already signed in (with `map.signIn` from `wion.config.
 | pick from a list | `And Ava chooses "Medium light" in "Light"` |
 | **Option+click** (Alt+click) a text | `Then Ava sees "{new name}"` |
 
-- **Name anything new `wion-test-…`** (for example `wion-test-fern`). The recording writes `{new name}` instead, and every test run makes a fresh name and deletes it afterwards.
+- **Name anything new `wion-test-…`** (for example `wion-test-fern`; `wion test fern` with spaces counts too). The recording writes `{new name}` instead, and every test run makes a fresh name and deletes it afterwards. Anything else typed is kept as typed, and a note warns that it would be left behind.
 - **Option+click marks a check:** the text flashes green, and the click does nothing else.
 - Pressing Enter in a form counts as clicking its button.
 - **Passwords are never recorded.** A control without a name, a checkbox, or a recording without any check becomes a note in the feature's description, never a silent gap.

@@ -139,7 +139,7 @@ export async function runTeach(args: TeachArgs, io: TeachIo): Promise<number> {
     io.log(`Recording "${args.scenario}". In the browser:`);
     io.log('  - click through the app as usual;');
     io.log('  - Option+click (Alt+click) a text to check that it is shown;');
-    io.log('  - name anything new wion-test-… (it becomes a fresh name in every test run).');
+    io.log('  - name anything new "wion test …" or wion-test-… (a fresh name in every test run).');
     io.log('Press Enter here when you are done, or Ctrl+C to cancel.');
     try {
       ending = await finish.ending;
