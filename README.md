@@ -6,7 +6,7 @@ You point Wion-Pilot at a web app, and it maps the screens. Then you build tests
 
 ## Status
 
-Milestones 0 to 5 of the [roadmap](PLAN.md) are done:
+Milestones 0 to 6 of the [roadmap](PLAN.md) are done:
 
 - **M0:** the tooling (strict TypeScript, ESLint and Prettier, Vitest, Playwright with playwright-bdd, CI on GitHub Actions)
 - **M1:** **Sprout**, the demo app that Wion-Pilot tests
@@ -14,10 +14,11 @@ Milestones 0 to 5 of the [roadmap](PLAN.md) are done:
 - **M3:** a bug-report draft for every failing test ([example](docs/example-bug-report.md))
 - **M4:** `wion map`, which maps an app's screens, form fields and locators
 - **M5:** `wion draft` and `wion review`: an AI drafts BDD scenarios from a topic or a code change, and a person approves each one
+- **M6:** `wion teach`: click through the app, and each action becomes a step of a scenario that a person then approves
 
 The latest test report from `main` is published at **https://hoopsmax.github.io/wion-pilot/**.
 
-Next is M6: teach mode, which turns clicks in the app into Gherkin steps.
+Next is M7: portfolio polish.
 
 ## Sprout, the demo app
 
@@ -60,7 +61,9 @@ Then close the terminal window, open a new one, and run the setup above.
 | `npm run map:sprout` | Map the running Sprout (signed in as Ava) into `.wion/map/`. See [Map an app](#map-an-app). |
 | `npm run wion -- map <url>` | Map any web app. `npm run wion -- --help` lists the options. |
 | `npm run wion -- draft "<topic>"` | Let an AI draft scenarios for review. See [AI drafts](#ai-drafts). |
-| `npm run wion -- review` | Approve or reject drafted scenarios, one by one. |
+| `npm run wion -- review` | Approve or reject drafted or recorded scenarios, one by one. |
+| `npm run teach:sprout -- "<scenario>"` | Record a scenario in Sprout by clicking, signed in as Ava. See [Teach mode](#teach-mode). |
+| `npm run wion -- teach <url> "<scenario>"` | Record a scenario in any web app. |
 | `npm run demo:bug` | Run one scenario that fails on purpose and write its bug-report draft. npm reports a failure: that is the demo. |
 | `npm run check` | Lint (ESLint and Prettier), typecheck and unit tests. Run it before every commit. |
 | `npm run format` | Format all files with Prettier. |
@@ -112,6 +115,8 @@ The features are written in plain language (Gherkin) and run on Playwright:
 | `reminders` | Each reminder wording, marking a plant watered (also offline), with "today" fixed by Playwright's clock so dates never flake. |
 | `watering-reminders` | Five scenarios drafted by Claude with `wion draft --diff main` and approved with `wion review` (two people watering, editing keeps the day, a new plant, sign-out blocked). Two needed a missing step added by hand; the file says which. |
 | `conflict` | Ava and Ben in two browsers: different fields are combined, equal values are no conflict, and only clashing fields are asked about, also after working offline or while typing. |
+| `adding-a-plant-by-clicking` | The first scenario recorded with `wion teach` (tagged `@recorded`), approved with `wion review`, unchanged since. |
+| `teach` | The recorder in a real browser, with Playwright playing Ava: clicks, typing and checks become steps, the test name becomes `{new name}`, a password is never recorded; and the `wion teach` command itself. |
 | `draft` | `wion draft` and `wion review` on saved answers: a good answer becomes a proposal, a made-up step is refused, only approved scenarios are written, and the prompt has personal data removed. |
 | `map` | `wion map` finds every screen and form field of Sprout with a locator for each, changes no data, and explains a wrong password or an app that is not running. |
 
@@ -211,6 +216,40 @@ npm run wion -- review
 **Run what you approve.** `bddgen` checks that every step exists, not that the steps come in a working order. The first real draft (the `watering-reminders` feature) passed the check, yet two of its scenarios failed when run: they changed a field without opening the form first. So run approved scenarios before committing them (`review` prints the command), and fix or drop what fails. Since then the AI sees the hand-written features, which show the order.
 
 **Ledger:** every real AI call (also a failed one) adds a line to `.wion/ledger.jsonl` with the provider, model, tokens, seconds and an estimated cost; the command prints the same.
+
+## Teach mode
+
+`wion teach` writes a scenario while you click through the app. No AI, no cost.
+
+```bash
+npm run demo
+```
+
+Then, in a second terminal:
+
+```bash
+npm run teach:sprout -- "Adding a plant by clicking"
+npm run wion -- review
+```
+
+A Chromium window opens, already signed in (with `map.signIn` from `wion.config.json`; its `teach` section names the person and the starting steps, here `Given Ava is signed in`). Click through as usual. Each action becomes one generic step:
+
+| You do | Step |
+| --- | --- |
+| click a button or link | `When Ava clicks "Add plant"` |
+| type into a field | `And Ava fills "Name" with "{new name}"` |
+| pick from a list | `And Ava chooses "Medium light" in "Light"` |
+| **Option+click** (Alt+click) a text | `Then Ava sees "{new name}"` |
+
+- **Name anything new `wion-test-…`** (for example `wion-test-fern`; `wion test fern` with spaces counts too). The recording writes `{new name}` instead, and every test run makes a fresh name and deletes it afterwards. Anything else typed is kept as typed, and a note warns that it would be left behind.
+- **Option+click marks a check:** the text flashes green, and the click does nothing else.
+- Pressing Enter in a form counts as clicking its button.
+- **Passwords are never recorded.** A control without a name, a checkbox, or a recording without any check becomes a note in the feature's description, never a silent gap.
+- **Enter in the terminal finishes** (so does closing the window); Ctrl+C cancels and saves nothing.
+
+The recording is checked with `bddgen` and saved as a proposal tagged `@recorded`; `wion review` approves it into `tests/features/<scenario name>/` (or `--feature <folder>`), exactly as for AI drafts.
+
+**Known limits:** only clicks on buttons and links, typing, list choices and checks of visible text are recorded; drag, hover and uploads are not. One `{new name}` per recording. The steps are UI-level; shorter domain steps can come from `wion draft`. Recording in the demo leaves the `wion-test-…` plant in its data; `npm run demo:reset` cleans up.
 
 ## How it's built
 

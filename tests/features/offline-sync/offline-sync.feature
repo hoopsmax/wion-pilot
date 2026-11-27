@@ -22,6 +22,13 @@ Feature: Working offline
     Then all of Ava's changes are synced
     And the server has the test plant with a watering interval of 9 days
 
+  Scenario: Back online, a first try that fails is retried within seconds
+    Given Ava changed the test plant's watering interval to 9 days while offline
+    And Ava's next request to the server will fail
+    When Ava goes back online
+    Then all of Ava's changes are synced
+    And the server has the test plant with a watering interval of 9 days
+
   Scenario: A plant added offline is created when back online
     Given Ava goes offline
     When Ava adds a new plant with light "Low light", watered every 14 days

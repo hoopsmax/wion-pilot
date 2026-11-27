@@ -1,6 +1,7 @@
 import { relative, resolve } from 'node:path';
 import { createInterface } from 'node:readline';
 import type { DraftScenario } from '../../core/src/draft/answer.ts';
+import { TEACH_PROVIDER } from '../../core/src/draft/gherkin.ts';
 import { listProposals, type Proposal } from '../../core/src/draft/proposals.ts';
 import { applyDecision, type Decision } from '../../core/src/draft/review.ts';
 import type { ReviewArgs } from './args.ts';
@@ -53,11 +54,21 @@ async function askFor(scenario: DraftScenario, io: ReviewIo): Promise<Answer> {
 function introduce(proposal: Proposal, io: ReviewIo): void {
   const { meta } = proposal;
   io.log('');
-  io.log(`== ${meta.title} (${meta.feature}), drafted by ${meta.provider}/${meta.model}`);
+  const origin =
+    meta.provider === TEACH_PROVIDER
+      ? 'recorded with wion teach'
+      : `drafted by ${meta.provider}/${meta.model}`;
+  io.log(`== ${meta.title} (${meta.feature}), ${origin}`);
   if (meta.topic) io.log(`   Topic: ${meta.topic}`);
   if (meta.diffBase) io.log(`   From the code change since: ${meta.diffBase}`);
   if (meta.answer.changeSummary) io.log(`   What changed: ${meta.answer.changeSummary}`);
   for (const item of meta.answer.testPlan) io.log(`   Plan: ${item}`);
+  // A recording's notes (no check, nothing typed as test data, …) are in its description.
+  if (meta.provider === TEACH_PROVIDER) {
+    for (const line of meta.answer.description.split('\n')) {
+      if (line.startsWith('- ')) io.log(`   Note: ${line.slice(2)}`);
+    }
+  }
   for (const missing of meta.answer.missingSteps) {
     io.log(`   Missing step (not used): "${missing.phrase}": ${missing.purpose}`);
   }

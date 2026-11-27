@@ -62,6 +62,19 @@ describe('toGherkin', () => {
   });
 });
 
+describe('recorded features', () => {
+  test('a recording is tagged @recorded and says it was recorded, not drafted', () => {
+    const recorded = { provider: 'teach', model: 'recording', date: '2026-11-27' };
+    const text = toGherkin(answer, recorded);
+    expect(text.split('\n')[0]).toBe('# Recorded with wion teach on 2026-11-27. Not approved yet.');
+    expect(text).toContain('@recorded\nFeature:');
+    expect(text).not.toContain('@ai-drafted');
+    expect(approvedHeader(recorded, '2026-11-28')).toBe(
+      '# Recorded with wion teach on 2026-11-27, approved with wion review on 2026-11-28.',
+    );
+  });
+});
+
 describe('approved features', () => {
   test('an approved feature names its origin and the approval day instead of "not approved"', () => {
     const text = toGherkin(answer, origin, approvedHeader(origin, '2026-11-27'));

@@ -22,7 +22,8 @@
     "demo:reset": "npm run reset -w @wion-pilot/sprout",
     "demo:bug": "WION_DEMO_BUG=1 npm test -- --grep @demo-bug",
     "wion": "node packages/cli/src/main.ts",
-    "map:sprout": "SPROUT_PASSWORD=sprout-ava npm run wion -- map http://localhost:4600"
+    "map:sprout": "SPROUT_PASSWORD=sprout-ava npm run wion -- map http://localhost:4600",
+    "teach:sprout": "SPROUT_PASSWORD=sprout-ava npm run wion -- teach http://localhost:4600"
   },
   "devDependencies": {
     "@eslint/js": "10.0.1",

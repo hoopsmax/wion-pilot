@@ -10,8 +10,17 @@ export interface SignInConfig {
   submit: string;
 }
 
+/** How `wion teach` writes recorded scenarios. */
+export interface TeachConfig {
+  /** The one-word name the steps use for the person, for example "Ava". */
+  person: string;
+  /** Steps that set the scene before the recording, without "Given", e.g. "Ava is signed in". */
+  given: string[];
+}
+
 export interface WionConfig {
   map?: { signIn?: SignInConfig };
+  teach?: TeachConfig;
 }
 
 export type Environment = Record<string, string | undefined>;
@@ -53,6 +62,21 @@ function readSignIn(raw: unknown, env: Environment, source: string): SignInConfi
   return { url: signIn.url, fields, submit: signIn.submit };
 }
 
+function readTeach(raw: unknown, source: string): TeachConfig {
+  const teach = raw as Partial<Record<keyof TeachConfig, unknown>>;
+  if (typeof teach.person !== 'string' || !/^\S+$/.test(teach.person)) {
+    fail(source, 'teach.person must be one word: the name the steps use, like "Ava".');
+  }
+  const given = teach.given ?? [];
+  const isStepList =
+    Array.isArray(given) &&
+    given.every((step) => typeof step === 'string' && !/^(Given|When|Then|And|But)\b/.test(step));
+  if (!isStepList) {
+    fail(source, 'teach.given must be a list of steps without "Given", like ["Ava is signed in"].');
+  }
+  return { person: teach.person, given: given as string[] };
+}
+
 /** Reads the config text; every problem names the file and what to fix. */
 export function parseConfig(text: string, source: string, env: Environment): WionConfig {
   let raw: unknown;
@@ -62,10 +86,14 @@ export function parseConfig(text: string, source: string, env: Environment): Wio
     fail(source, `is not valid JSON (${String(error)}).`);
   }
   if (typeof raw !== 'object' || raw === null) fail(source, 'must contain a JSON object.');
-  const map = (raw as { map?: unknown }).map;
-  if (map === undefined) return {};
-  const signIn = (map as { signIn?: unknown }).signIn;
-  return signIn === undefined ? { map: {} } : { map: { signIn: readSignIn(signIn, env, source) } };
+  const config: WionConfig = {};
+  const { map, teach } = raw as { map?: unknown; teach?: unknown };
+  if (map !== undefined) {
+    const signIn = (map as { signIn?: unknown }).signIn;
+    config.map = signIn === undefined ? {} : { signIn: readSignIn(signIn, env, source) };
+  }
+  if (teach !== undefined) config.teach = readTeach(teach, source);
+  return config;
 }
 
 /** Loads a config file. Without a file there is simply no config, unless the file was asked for. */

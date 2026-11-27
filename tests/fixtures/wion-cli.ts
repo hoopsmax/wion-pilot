@@ -31,14 +31,20 @@ export interface WionRun {
  */
 export async function runWion(
   args: string[],
-  { env = {}, input = '' }: { env?: Record<string, string>; input?: string } = {},
+  {
+    env = {},
+    input = '',
+    keepInputOpen = false,
+  }: { env?: Record<string, string>; input?: string; keepInputOpen?: boolean } = {},
 ): Promise<WionRun> {
   const running = execFileAsync(process.execPath, [cli, ...args], {
     cwd: repoRoot,
     env: { ...process.env, ...env },
     timeout: 120_000,
   });
-  running.child.stdin?.end(input);
+  // A terminal's input stays open; the command must still return to the shell by itself.
+  if (keepInputOpen) running.child.stdin?.write(input);
+  else running.child.stdin?.end(input);
   try {
     const { stdout, stderr } = await running;
     return { exitCode: 0, output: stdout + stderr };

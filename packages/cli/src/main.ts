@@ -1,18 +1,11 @@
 #!/usr/bin/env node
 import { parseCliArgs, USAGE, UsageError } from './args.ts';
+import { causes } from './causes.ts';
 import { CRAWL_DEFAULTS } from '../../core/src/map/crawler.ts';
 import { runDraft } from './draft-command.ts';
 import { runMap } from './map-command.ts';
 import { runReviewInTerminal } from './review-command.ts';
-
-/** The first line of each cause, so a failure says what went wrong underneath without a stack. */
-function causes(error: unknown): string[] {
-  const lines: string[] = [];
-  for (let cause = (error as Error).cause; cause instanceof Error; cause = cause.cause) {
-    lines.push(`  because: ${cause.message.split('\n')[0] ?? ''}`);
-  }
-  return lines;
-}
+import { runTeach } from './teach-command.ts';
 
 async function main(argv: string[]): Promise<number> {
   try {
@@ -30,6 +23,14 @@ async function main(argv: string[]): Promise<number> {
     }
     if (args.command === 'draft') {
       return await runDraft(args, {
+        root: process.cwd(),
+        env: process.env,
+        now: () => new Date(),
+        log,
+      });
+    }
+    if (args.command === 'teach') {
+      return await runTeach(args, {
         root: process.cwd(),
         env: process.env,
         now: () => new Date(),

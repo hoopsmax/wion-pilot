@@ -59,4 +59,35 @@ describe('parseCliArgs', () => {
     expect(() => parseCliArgs(argv, defaults)).toThrow(UsageError);
     expect(() => parseCliArgs(argv, defaults)).toThrow(message);
   });
+
+  test('wion teach <url> <scenario name>, in several words or quoted', () => {
+    expect(
+      parseCliArgs(['teach', 'http://localhost:4600', 'Adding', 'a', 'plant'], defaults),
+    ).toEqual({
+      command: 'teach',
+      startUrl: 'http://localhost:4600/',
+      scenario: 'Adding a plant',
+      feature: undefined,
+      configPath: undefined,
+      wionDir: '.wion',
+      headless: false,
+    });
+    expect(
+      parseCliArgs(
+        ['teach', 'http://x.test', 'Adding a plant', '--feature', 'plants', '--headless'],
+        defaults,
+      ),
+    ).toMatchObject({ scenario: 'Adding a plant', feature: 'plants', headless: true });
+  });
+
+  test.each([
+    [['teach'], /needs the URL/],
+    [['teach', 'http://x.test'], /needs a name for the scenario/],
+    [
+      ['teach', 'http://x.test', 'Add', '--feature', 'My Plants'],
+      /--feature must be a folder name/,
+    ],
+  ])('wrong use of teach is explained: %j', (argv, message) => {
+    expect(() => parseCliArgs(argv, defaults)).toThrow(message);
+  });
 });

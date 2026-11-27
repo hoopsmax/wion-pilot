@@ -17,6 +17,7 @@ describe('featureTags and isExample', () => {
     ['Feature: Hand-written\n', true],
     ['@ai-drafted\nFeature: Drafted\n', false],
     ['@not-an-example\nFeature: Tests wion itself\n', false],
+    ['@recorded\nFeature: Recorded by a person\n', true],
   ])('%j is an example: %s', (text, example) => {
     expect(isExample(text)).toBe(example);
   });
@@ -43,11 +44,11 @@ describe('readExampleFeatures', () => {
     }
   });
 
-  test("Sprout's examples: the app's own features, not the demo bug, wion's or AI drafts", async () => {
+  test("Sprout's examples: hand-written and recorded features, not the demo bug, wion's or AI drafts", async () => {
     const paths = (await readExampleFeatures(repoRoot)).map((example) => example.path);
     expect(paths).toEqual(
-      ['auth', 'conflict', 'offline-sync', 'plants', 'reminders'].map((name) =>
-        join('tests', 'features', name, `${name}.feature`),
+      ['adding-a-plant-by-clicking', 'auth', 'conflict', 'offline-sync', 'plants', 'reminders'].map(
+        (name) => join('tests', 'features', name, `${name}.feature`),
       ),
     );
   });
