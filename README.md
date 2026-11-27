@@ -148,7 +148,7 @@ The milestones from [PLAN.md](PLAN.md):
 - **M4:** `wion map` ([#5](https://github.com/hoopsmax/wion-pilot/pull/5))
 - **M5:** `wion draft` and `wion review` ([#6](https://github.com/hoopsmax/wion-pilot/pull/6))
 - **M6:** `wion teach` ([#7](https://github.com/hoopsmax/wion-pilot/pull/7), [#8](https://github.com/hoopsmax/wion-pilot/pull/8))
-- **M7:** portfolio polish, this page (in progress)
+- **M7:** portfolio polish: this front page and the demo GIF ([#9](https://github.com/hoopsmax/wion-pilot/pull/9), [#10](https://github.com/hoopsmax/wion-pilot/pull/10))
 
 ## License
 
