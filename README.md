@@ -1,56 +1,132 @@
 # Wion-Pilot
 
+[![CI](https://github.com/hoopsmax/wion-pilot/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/hoopsmax/wion-pilot/actions/workflows/ci.yml?query=branch%3Amain)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![Live test report](https://img.shields.io/badge/test%20report-live-brightgreen.svg)](https://hoopsmax.github.io/wion-pilot/)
+
 AI-assisted test automation for web apps, built with TypeScript and Playwright.
 
-You point Wion-Pilot at a web app, and it maps the screens. Then you build tests three ways: write them in plain Gherkin, record them by clicking through the app, or let AI draft them for your approval. Tests run on Playwright, and every failure produces a bug-report draft that you check before filing.
+End-to-end tests are slow to write by hand. An AI writes them fast, but not always right. Wion-Pilot combines both and keeps a person in charge: it maps a web app's screens, records a scenario while you click through the app, and lets an AI draft more, but nothing enters the test suite until a person approves it. The tests are plain-language Gherkin running on Playwright, and every failure comes with a bug-report draft to check before filing.
 
-## Status
+Everything is shown on **Sprout**, a small made-up plant-care app with the flows that are hardest to test: offline mode, and two people editing the same plant. The [latest test report](https://hoopsmax.github.io/wion-pilot/) from `main` is online.
 
-Milestones 0 to 6 of the [roadmap](PLAN.md) are done:
+## What it does
 
-- **M0:** the tooling (strict TypeScript, ESLint and Prettier, Vitest, Playwright with playwright-bdd, CI on GitHub Actions)
-- **M1:** **Sprout**, the demo app that Wion-Pilot tests
-- **M2:** a hand-written BDD suite that automates Sprout's hardest flows, run in CI on every push
-- **M3:** a bug-report draft for every failing test ([example](docs/example-bug-report.md))
-- **M4:** `wion map`, which maps an app's screens, form fields and locators
-- **M5:** `wion draft` and `wion review`: an AI drafts BDD scenarios from a topic or a code change, and a person approves each one
-- **M6:** `wion teach`: click through the app, and each action becomes a step of a scenario that a person then approves
+- **Map** (`wion map`): crawls the app and writes down every screen, its form fields and their rules, with a Playwright locator for each button, link and field. It never clicks, types or submits anything apart from signing in. [More](docs/map.md)
+- **Teach** (`wion teach`): you click through the app in a browser, and each action becomes a step of a Gherkin scenario. No AI, no cost. [More](docs/teach.md)
+- **Draft and review** (`wion draft`, `wion review`): an AI drafts scenarios from a topic or a code change, using only steps that already exist; a made-up step is refused. A person approves each scenario. [More](docs/ai-drafts.md)
+- **Bug-report drafts:** every failing test writes a draft with the steps, expected and actual, a screenshot, video and trace, and the browser's console errors and failed requests. [More](docs/bug-reports.md), or see [an example](docs/example-bug-report.md)
+- **The BDD suite:** offline sync, two people editing the same plant in two browsers, and reminders with a fixed clock. Each test makes and removes its own data, so the suite runs in parallel, in CI on every push. [More](docs/test-suite.md), and [about Sprout](docs/sprout.md)
 
-The latest test report from `main` is published at **https://hoopsmax.github.io/wion-pilot/**.
+## Quickstart
 
-Next is M7: portfolio polish.
-
-## Sprout, the demo app
-
-Sprout is a small, made-up plant-care app (`apps/sprout`). It exists to show flows that are often tested only by hand:
-
-- **Offline mode.** Every change is saved in the browser first (an outbox in IndexedDB) and sent when the connection is there. A banner always says **Offline**, **Syncing** or **Synced**, and changes that have not reached the server show "Not synced yet".
-- **Two people editing the same plant.** Each plant has a version number. When two edits meet, Sprout compares them field by field: fields only one person changed are combined automatically, and equal values are not a conflict. Only fields both people changed to different values are shown on a conflict screen, side by side ("Yours" and "Latest (Ben)"), for the user to choose.
-- **Watering reminders.** Each plant says when to water it next, counted in calendar days from its last watering, and a **Watered** button starts the count again. Tests fix "today" with Playwright's clock.
-- **No silent data loss.** A change is never dropped: it waits in the outbox, or it waits for a decision. Signing out is blocked while changes are still waiting.
-
-## Requirements
-
-- Node.js 26, the current LTS. The version is pinned in `.nvmrc`.
-
-## Setup
+You need git and Node.js 26 (pinned in `.nvmrc`).
 
 ```bash
+git clone https://github.com/hoopsmax/wion-pilot.git
+cd wion-pilot
 nvm install
 npm ci
-npx playwright install
+npx playwright install chromium
+npm test
+npx playwright show-report
 ```
 
-`nvm install` reads `.nvmrc` and switches to Node 26 (with fnm, use `fnm use`). `npx playwright install` downloads the browsers, once per machine.
+`npm test` starts its own copy of Sprout, with its own data, and runs the whole suite. The last command opens the report.
 
-If your terminal says `nvm: command not found`, install nvm first (macOS with zsh shown; the nvm installer only adds itself to a shell settings file that already exists):
+<details>
+<summary>Your terminal says <code>nvm: command not found</code>?</summary>
+
+Install nvm first (macOS with zsh shown; the nvm installer only adds itself to a shell settings file that already exists):
 
 ```bash
 touch ~/.zshrc
 curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.41.0/install.sh | bash
 ```
 
-Then close the terminal window, open a new one, and run the setup above.
+Then close the terminal window, open a new one, and run the steps above. With fnm, use `fnm use` instead of `nvm install`.
+
+</details>
+
+Then try the tools on the demo app. Start Sprout in one terminal (it runs at http://localhost:4600):
+
+```bash
+npm run demo
+```
+
+In a second terminal:
+
+```bash
+npm run map:sprout                                    # map the screens, then open .wion/map/index.html
+npm run teach:sprout -- "Adding a plant by clicking"  # record a scenario by clicking
+npm run wion -- draft "watering reminders"            # no AI by default: writes a prompt to paste into any chat
+npm run wion -- review                                # approve or reject what was recorded or drafted
+```
+
+`npm run demo:reset` restores the demo data at any time.
+
+## Architecture
+
+```mermaid
+flowchart TB
+    app["Web app<br/>(Sprout in the demo)"]
+    teach["wion teach<br/>records your clicks"]
+    map["wion map<br/>screens, fields, locators"]
+    draft["wion draft<br/>asks an AI"]
+    ai["AI provider<br/>none, Ollama or Claude"]
+    review{{"wion review<br/>a person approves"}}
+    tests["tests/features/<br/>run on Playwright,<br/>against the app"]
+    out["Report on GitHub Pages<br/>and bug-report drafts"]
+
+    app --> teach
+    app --> map
+    map -->|app map| draft
+    draft -->|redacted prompt| ai
+    ai -->|JSON answer| draft
+    teach -->|checked proposal| review
+    draft -->|checked proposal| review
+    review -->|approved scenarios| tests
+    tests --> out
+```
+
+- **`wion map`** writes `.wion/map/app-map.json`. `wion draft` sends a summary of it, so the AI knows the screens and fields.
+- **`wion teach` and `wion draft`** both write a proposal, and `bddgen` checks its steps against the shared steps. A proposal with a made-up step is never offered for review.
+- **`wion review`** is the only way into `tests/features/`.
+- **`npm test`** generates the tests with playwright-bdd and runs them on Playwright. Each failure writes a bug-report draft, and CI publishes the report from `main` to GitHub Pages.
+- **Every AI call** is logged with its tokens, time and estimated cost in `.wion/ledger.jsonl`.
+
+The code: `packages/core/src/` has one folder per area (`map`, `teach`, `draft`, `report`, `shared`), `packages/cli/` is the `wion` command, `apps/sprout/` is the demo app, and `tests/` holds the suite (features, shared steps, page objects, fixtures). [PLAN.md](PLAN.md) has the full layout.
+
+## Design decisions
+
+**Locators by role and label, not CSS or XPath.** A locator like `getByRole('button', { name: 'Save' })` uses the name a person sees, so it survives changes to classes and markup, and it reads like the step it serves. The map, the generic steps (`Ava clicks "Save"`) and the recordings all use these same names. An element without an accessible name gets no locator but a note in the map: a screen-reader user would miss it too. Lint forbids XPath, and CSS is allowed only with a comment that says why.
+
+**Plain JSON files instead of a database.** Sprout keeps all its data in one JSON file. It is written atomically (a temporary file, then a rename), and changes are applied one at a time, so two edits never both turn version 3 into version 4. Resetting the demo is a file copy, and the test suite runs its own Sprout on its own copy. Wion's output is plain files too: the app map, the proposals and the ledger. There is nothing to install, and any state can be opened and read. The trade-off is scale: this suits a demo with small data and one server, not production.
+
+**Nothing generated enters the suite without a person.** AI drafts and recordings both wait in `.wion/proposals/` and reach `tests/features/` only through `wion review`. Checks alone are not enough: the first real AI draft passed the step check, yet two of its five scenarios failed when run, because they changed a field without opening the form first. So review shows every scenario, and it prints the command to run the approved ones before you commit them.
+
+**No AI by default.** The default provider is `none`: wion writes the prompt to a file that you can paste into any chat. It costs nothing and sends nothing anywhere. Ollama keeps everything on your computer, and Claude is opt-in, with a key in `.env`. With any provider, the prompt is redacted first (email addresses and secrets), and every call is logged.
+
+**Tests own their data and never wait blindly.** Each scenario creates plants named `wion-test-…` and deletes them afterwards, so the suite runs in parallel and in any order. There are no fixed waits: every step waits for something its action caused. When a test flaked, the cause was fixed, not hidden behind a longer timeout. For example, a conflict scenario once failed in CI because, right after reconnecting, Sprout retried a failed sync only after 10 seconds. It now retries after 1, 2, 4 and 8 seconds.
+
+## Built with Claude Code
+
+I built Wion-Pilot with [Claude Code](https://claude.com/claude-code), Anthropic's coding agent.
+
+- **My part:**
+  - I set the rules ([CLAUDE.md](CLAUDE.md)) and the roadmap ([PLAN.md](PLAN.md));
+  - before any code was written for a milestone, Claude Code wrote a plan, and I approved or changed it;
+  - I ran each milestone on my own Mac, recorded the teach scenario, reviewed the AI-drafted scenarios with `wion review`, and merged every pull request after CI passed.
+- **Claude Code's part:** it wrote the code, the tests and the docs. Every commit it wrote says so in a `Co-Authored-By` line.
+- **Pace:** milestones 0 to 6 took three days, 25 to 27 November 2026.
+
+What my part caught that the tests alone did not:
+
+- **`wion review` didn't return to the shell.** It passed in CI, but on a real Mac it never gave the terminal back. A test now runs it with the input left open, like a terminal.
+- **The first AI draft failed when run** (see the approval gate above), although it had passed every check.
+- **The test name wasn't recognized.** My first recordings typed `wion test fern` with spaces, so it wasn't treated as test data. The recorder now accepts that spelling, and it warns about anything typed that a test run would leave behind.
+
+Wion-Pilot also uses Claude in a separate way: `wion draft --provider claude` calls the Claude API. That is how the scenarios in `tests/features/watering-reminders/` were drafted, before I approved them.
 
 ## Commands
 
@@ -58,11 +134,11 @@ Then close the terminal window, open a new one, and run the setup above.
 | --- | --- |
 | `npm run demo` | Build Sprout and start it at http://localhost:4600. |
 | `npm run demo:reset` | Restore Sprout's seed data. Works while the demo is running. |
-| `npm run map:sprout` | Map the running Sprout (signed in as Ava) into `.wion/map/`. See [Map an app](#map-an-app). |
+| `npm run map:sprout` | Map the running Sprout (signed in as Ava) into `.wion/map/`. See [Map an app](docs/map.md). |
 | `npm run wion -- map <url>` | Map any web app. `npm run wion -- --help` lists the options. |
-| `npm run wion -- draft "<topic>"` | Let an AI draft scenarios for review. See [AI drafts](#ai-drafts). |
+| `npm run wion -- draft "<topic>"` | Let an AI draft scenarios for review. See [AI drafts](docs/ai-drafts.md). |
 | `npm run wion -- review` | Approve or reject drafted or recorded scenarios, one by one. |
-| `npm run teach:sprout -- "<scenario>"` | Record a scenario in Sprout by clicking, signed in as Ava. See [Teach mode](#teach-mode). |
+| `npm run teach:sprout -- "<scenario>"` | Record a scenario in Sprout by clicking, signed in as Ava. See [Teach mode](docs/teach.md). |
 | `npm run wion -- teach <url> "<scenario>"` | Record a scenario in any web app. |
 | `npm run demo:bug` | Run one scenario that fails on purpose and write its bug-report draft. npm reports a failure: that is the demo. |
 | `npm run check` | Lint (ESLint and Prettier), typecheck and unit tests. Run it before every commit. |
@@ -72,188 +148,18 @@ Then close the terminal window, open a new one, and run the setup above.
 
 Lint also enforces some of the test rules: no fixed waits (`waitForTimeout`), no XPath locators, and no source file over 300 lines.
 
-## Try Sprout
+## Roadmap
 
-Start it with `npm run demo` and open http://localhost:4600. The two demo users are made up:
+The milestones from [PLAN.md](PLAN.md):
 
-| User | Email | Password |
-| --- | --- | --- |
-| Ava | `ava@sprout.test` | `sprout-ava` |
-| Ben | `ben@sprout.test` | `sprout-ben` |
-
-**Watering reminders**
-
-Each plant says when it needs water next: "Water in 3 days", "Water tomorrow", "Water today" or "2 days overdue". **Watered** starts the count again from today, also offline. If two people water the same plant, the later day simply wins; it is never a conflict. A fresh demo (`npm run demo:reset`) always shows a mix, because the seed's waterings are moved to the current date.
-
-**Offline mode**
-
-1. Sign in as Ava. The banner says **Synced**.
-2. Open the browser's DevTools, Network tab, and choose **Offline**. The banner says **Offline**.
-3. Edit a plant or add one. It shows "Not synced yet", and Sign out is blocked.
-4. Switch the network back to **No throttling**. The banner goes to **Syncing**, then **Synced**.
-
-Reloading the page while offline is not supported yet (that needs a service worker, planned for later).
-
-**A conflict**
-
-1. Sign in as Ava in a normal window and as Ben in a private window.
-2. Both open the same plant with **Edit**.
-3. Ben changes the name and saves. Ava changes the name to something else and saves.
-4. Ava sees the conflict screen with only the **Name** field. If they had changed different fields, both changes would simply be kept.
-
-`npm run demo:reset` brings the seed data back at any time.
-
-## The BDD test suite
-
-The features are written in plain language (Gherkin) and run on Playwright:
-
-| Feature | What it checks |
-| --- | --- |
-| `auth` | Signing in, a wrong password, signing out. |
-| `plants` | Adding and editing a plant (also step by step, with the generic steps below); the form explains each invalid field next to the field. |
-| `offline-sync` | Changes made offline wait on the device ("Not synced yet", sign-out blocked) and reach the server when back online. |
-| `reminders` | Each reminder wording, marking a plant watered (also offline), with "today" fixed by Playwright's clock so dates never flake. |
-| `watering-reminders` | Five scenarios drafted by Claude with `wion draft --diff main` and approved with `wion review` (two people watering, editing keeps the day, a new plant, sign-out blocked). Two needed a missing step added by hand; the file says which. |
-| `conflict` | Ava and Ben in two browsers: different fields are combined, equal values are no conflict, and only clashing fields are asked about, also after working offline or while typing. |
-| `adding-a-plant-by-clicking` | The first scenario recorded with `wion teach` (tagged `@recorded`), approved with `wion review`, unchanged since. |
-| `teach` | The recorder in a real browser, with Playwright playing Ava: clicks, typing and checks become steps, the test name becomes `{new name}`, a password is never recorded; and the `wion teach` command itself. |
-| `draft` | `wion draft` and `wion review` on saved answers: a good answer becomes a proposal, a made-up step is refused, only approved scenarios are written, and the prompt has personal data removed. |
-| `map` | `wion map` finds every screen and form field of Sprout with a locator for each, changes no data, and explains a wrong password or an app that is not running. |
-
-Run them with `npm test`, then open the report with `npx playwright show-report`. The suite starts its own Sprout on port 4610 with its own data, so it never touches `npm run demo`.
-
-How the tests are written (the rules are in [CLAUDE.md](CLAUDE.md)):
-
-- **One folder per feature** in `tests/features/`, with its `.feature` file and its steps. Steps that several features use live in `tests/steps/`.
-- **Steps talk to page objects** (`tests/pages/`), never to raw locators. A lint rule enforces this.
-- **Locators by role, label, text or test id.** No XPath (also enforced by lint).
-- **No fixed waits.** Every step waits for something its action caused, such as the form closing and then the banner saying "Synced".
-- **Own test data:** each test creates plants named `wion-test-…` and deletes them afterwards, so tests run in parallel and in any order. Before deleting, a test waits until every online browser has sent its changes, so nothing reaches the server after the cleanup.
-- **Generic steps** (`tests/steps/ui.steps.ts`), one per kind of action on any screen, by the names a person sees: `Ava clicks "Add plant"`, `Ava fills "Name" with "…"`, `Ava chooses "Medium light" in "Light"`, `Ava sees "…"`. Inside them, `"{new name}"` stands for one fresh `wion-test-…` name per scenario, deleted afterwards. Recorded scenarios (M6) are written with these steps.
-- **Failure evidence:** a failing test keeps a screenshot, a video and a trace. In CI the HTML report is attached to every run as the `playwright-report` artifact.
-
-`PW_CHROMIUM_PATH` is only for sandboxes whose pre-installed browser belongs to another Playwright version; leave it unset on your machine.
-
-## Bug-report drafts
-
-When a test fails, Wion-Pilot writes a draft bug report to `reports/bugs/<feature>--<scenario>.md`. A person checks it before filing it; every draft starts with **"DRAFT: verify before filing."** See [a real example](docs/example-bug-report.md).
-
-A draft contains:
-
-- the steps to reproduce, taken from the Gherkin steps, each marked passed ✅, failing ❌ or not run
-- a link to the `.feature` file and to the failing line
-- expected and actual, read from Playwright's error; if the error states neither, the draft says so instead of guessing
-- links to the screenshot, video and trace, and the command to open the trace
-- the browser console errors and failed network requests of everyone in the test (Ava and Ben)
-- the full error, and a "Notes" section for anything the reporter could not find out
-
-Passing tests write nothing, and each run starts with an empty `reports/bugs/`. In CI the drafts of a failing run are attached as the `bug-report-drafts` artifact, and the "Bug-report demo" job checks on every push that `npm run demo:bug` still produces a complete draft.
-
-The reporter lives in `packages/core/src/report/`, the first part of Wion-Pilot itself.
-
-## Map an app
-
-`wion map` opens an app's pages and writes down what a tester needs: every screen, its form fields and a Playwright locator for every button, link and field. Try it on Sprout:
-
-```bash
-npm run demo
-```
-
-Then, in a second terminal:
-
-```bash
-npm run map:sprout
-open .wion/map/index.html
-```
-
-(On Linux, open the file in a browser instead of using `open`.) The run prints one line per screen and writes:
-
-- `.wion/map/app-map.json`: the map, for tools and later milestones
-- `.wion/map/index.html`: a viewer page, one card per screen
-- `.wion/map/screens/`: a full-page screenshot of each screen
-
-For each screen the map keeps the address and route pattern (`/plants/:id/edit`), the title and headings, the forms with each field's label, type and rules (required, min, max, options), the buttons, links and fields with a locator, and the `data-testid`s. An element without an accessible name gets no locator but a note: a screen reader user would miss it too.
-
-**How it crawls**
-
-- It signs in first, if `wion.config.json` says how: the fields by their label, the button by its name. Secrets stay out of the file: `${SPROUT_PASSWORD}` is read from the environment, and a missing variable stops the run with a message that names it. The sign-in screen itself is mapped before signing in.
-- It then opens pages breadth-first by their address, within `--max-pages` (default 30) and `--max-depth` (default 3), and only on the start URL's own site unless `--allow-domain` adds another.
-- It maps each route once: five "Edit" links are one screen, `/plants/:id/edit`. Two addresses that show exactly the same screen get one card that says "also at" (Sprout shows its plant list at `/` and `/plants`).
-- **It never clicks, types or submits** apart from signing in, and it never opens links that look destructive (delete, remove, sign out, pay). The "Links not followed" list says why each was skipped. Mapping Sprout changes no data; the `map` feature checks that.
-- Wrong use fails with a clear message: a wrong URL, an app that is not running ("Is the app running? For Sprout: npm run demo"), a missing password, or a sign-in error, quoted from the app's own alert.
-
-**Known limit:** a crawler only finds screens that a link leads to. Sprout's conflict screen appears only while a conflict is waiting and has no link of its own, so it is not on the map. The `conflict` feature tests it instead.
-
-In CI the "App map" job maps Sprout on every push and keeps the result as the `app-map` artifact. The code lives in `packages/core/src/map/` and the command in `packages/cli/`.
-
-## AI drafts
-
-`wion draft` asks an AI for new BDD scenarios; `wion review` lets a person approve them one by one. **Nothing enters `tests/features/` without that approval.**
-
-```bash
-npm run wion -- draft "watering reminders"                                # by topic
-npm run wion -- draft --diff main --provider claude                       # from the code change since main
-npm run wion -- draft "watering reminders" --diff main --provider claude  # both
-npm run wion -- review
-```
-
-**What the AI gets:** the topic and/or the app's code change (`git diff`, files under `apps/` only), a short summary of the app map (screens, fields, buttons; no screenshots; run `npm run map:sprout` first for better drafts), the list of shared steps from `tests/steps/`, and the hand-written features as examples of how steps go together (which ones must come first). AI drafts are never shown as examples, nor features tagged `@not-an-example` (the demo bug, and the features that test wion itself). With a code change it also explains in plain words what changed and writes a test plan.
-
-**Before anything is sent**, the prompt is redacted: email addresses, the values of environment variables named like `PASSWORD`, `TOKEN`, `KEY` or `SECRET`, and long key- or hash-like strings become `<email>` / `<secret>`. The command says how many it removed.
-
-**Providers** (one interface, `packages/core/src/draft/providers/`):
-
-| Provider | What it does |
-| --- | --- |
-| `none` (default) | No AI call. Saves the prompt in `.wion/prompts/` to paste into any chat; bring the answer back with `--answer <file>`. |
-| `ollama` | A local model through Ollama (`--model`, default `llama3.1`). Free; nothing leaves the computer. |
-| `claude` | Opt-in. Claude Opus 5.5 by default (`--model` to change), through Anthropic's SDK. Needs `ANTHROPIC_API_KEY`: copy `.env.example` to `.env` and fill it in (`npm run wion` reads `.env`; git ignores it). Create the key in the Claude Console under API keys, for a **workspace** (a key for the whole organization is refused). A call waits at most 3 minutes. |
-
-**The answer is checked, never trusted:** the AI must answer with JSON in a fixed shape; our code writes the Gherkin; then `bddgen` checks it against the shared steps only. A made-up step fails the check and is named; such a draft is kept in `.wion/proposals/` with the reason but never offered for review. Steps the AI would need but that do not exist are listed as comments ("missing steps"), for a person to write.
-
-**Review** shows each scenario of each passing proposal and asks: approve, reject, skip the proposal, or quit. Approved scenarios are checked again and written to `tests/features/<feature>/<feature>.feature` with a header saying who drafted them and when they were approved (or added to the end of an existing file; nothing is overwritten). Every drafted feature carries the `@ai-drafted` tag.
-
-**Run what you approve.** `bddgen` checks that every step exists, not that the steps come in a working order. The first real draft (the `watering-reminders` feature) passed the check, yet two of its scenarios failed when run: they changed a field without opening the form first. So run approved scenarios before committing them (`review` prints the command), and fix or drop what fails. Since then the AI sees the hand-written features, which show the order.
-
-**Ledger:** every real AI call (also a failed one) adds a line to `.wion/ledger.jsonl` with the provider, model, tokens, seconds and an estimated cost; the command prints the same.
-
-## Teach mode
-
-`wion teach` writes a scenario while you click through the app. No AI, no cost.
-
-```bash
-npm run demo
-```
-
-Then, in a second terminal:
-
-```bash
-npm run teach:sprout -- "Adding a plant by clicking"
-npm run wion -- review
-```
-
-A Chromium window opens, already signed in (with `map.signIn` from `wion.config.json`; its `teach` section names the person and the starting steps, here `Given Ava is signed in`). Click through as usual. Each action becomes one generic step:
-
-| You do | Step |
-| --- | --- |
-| click a button or link | `When Ava clicks "Add plant"` |
-| type into a field | `And Ava fills "Name" with "{new name}"` |
-| pick from a list | `And Ava chooses "Medium light" in "Light"` |
-| **Option+click** (Alt+click) a text | `Then Ava sees "{new name}"` |
-
-- **Name anything new `wion-test-…`** (for example `wion-test-fern`; `wion test fern` with spaces counts too). The recording writes `{new name}` instead, and every test run makes a fresh name and deletes it afterwards. Anything else typed is kept as typed, and a note warns that it would be left behind.
-- **Option+click marks a check:** the text flashes green, and the click does nothing else.
-- Pressing Enter in a form counts as clicking its button.
-- **Passwords are never recorded.** A control without a name, a checkbox, or a recording without any check becomes a note in the feature's description, never a silent gap.
-- **Enter in the terminal finishes** (so does closing the window); Ctrl+C cancels and saves nothing.
-
-The recording is checked with `bddgen` and saved as a proposal tagged `@recorded`; `wion review` approves it into `tests/features/<scenario name>/` (or `--feature <folder>`), exactly as for AI drafts.
-
-**Known limits:** only clicks on buttons and links, typing, list choices and checks of visible text are recorded; drag, hover and uploads are not. One `{new name}` per recording. The steps are UI-level; shorter domain steps can come from `wion draft`. Recording in the demo leaves the `wion-test-…` plant in its data; `npm run demo:reset` cleans up.
-
-## How it's built
-
-The coding rules are in [CLAUDE.md](CLAUDE.md), and the roadmap and repository layout are in [PLAN.md](PLAN.md).
+- **M0:** the tooling: strict TypeScript, ESLint and Prettier, Vitest, Playwright with playwright-bdd, CI on GitHub Actions ([#1](https://github.com/hoopsmax/wion-pilot/pull/1))
+- **M1:** Sprout, the demo app ([#2](https://github.com/hoopsmax/wion-pilot/pull/2))
+- **M2:** the hand-written BDD suite ([#3](https://github.com/hoopsmax/wion-pilot/pull/3))
+- **M3:** bug-report drafts ([#4](https://github.com/hoopsmax/wion-pilot/pull/4))
+- **M4:** `wion map` ([#5](https://github.com/hoopsmax/wion-pilot/pull/5))
+- **M5:** `wion draft` and `wion review` ([#6](https://github.com/hoopsmax/wion-pilot/pull/6))
+- **M6:** `wion teach` ([#7](https://github.com/hoopsmax/wion-pilot/pull/7), [#8](https://github.com/hoopsmax/wion-pilot/pull/8))
+- **M7:** portfolio polish, this page (in progress)
 
 ## License
 
