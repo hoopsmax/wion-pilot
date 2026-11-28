@@ -2,13 +2,13 @@
 
 [![CI](https://github.com/hoopsmax/wion-pilot/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/hoopsmax/wion-pilot/actions/workflows/ci.yml?query=branch%3Amain)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-[![Live test report](https://img.shields.io/badge/test%20report-live-brightgreen.svg)](https://hoopsmax.github.io/wion-pilot/)
+[![Live test report](https://img.shields.io/badge/test%20report-live-brightgreen.svg)](https://hoopsmax.github.io/wion-pilot/report/)
 
 AI-assisted test automation for web apps, built with TypeScript and Playwright.
 
 End-to-end tests are slow to write by hand. An AI writes them fast, but not always right. Wion-Pilot combines both and keeps a person in charge: it maps a web app's screens, records a scenario while you click through the app, and lets an AI draft more, but nothing enters the test suite until a person approves it. The tests are plain-language Gherkin running on Playwright, and every failure comes with a bug-report draft to check before filing.
 
-Everything is shown on **Sprout**, a small made-up plant-care app with the flows that are hardest to test: offline mode, and two people editing the same plant. The [latest test report](https://hoopsmax.github.io/wion-pilot/) from `main` is online.
+Everything is shown on **Sprout**, a small made-up plant-care app with the flows that are hardest to test: offline mode, and two people editing the same plant. The [latest test report](https://hoopsmax.github.io/wion-pilot/report/) from `main` is online.
 
 ![wion map, wion teach, and wion draft with wion review, run on the demo app](docs/media/wion-demo.gif)
 

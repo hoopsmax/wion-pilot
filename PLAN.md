@@ -248,3 +248,4 @@ Built in five small steps, each one approved first. The scope was narrowed to th
   - **Cause:** Node drops a request on a keep-alive connection that has been idle for 6 seconds, and Playwright's request client reuses such connections.
   - **Fix:** Sprout now keeps idle connections open for 65 seconds.
 - **E2E failures in CI:** the job's log now shows each bug-report draft and what the page showed.
+- **A landing page** at https://hoopsmax.github.io/wion-pilot/ (`site/index.html`): what Wion-Pilot is, the demo GIF and links. The live test report moved to `/report/`, and CI puts the site together from both.

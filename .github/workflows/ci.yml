@@ -71,11 +71,18 @@ jobs:
             sed -E 's/(Bearer )[A-Za-z0-9._-]+/\1<hidden>/g' "$file"
             echo "::endgroup::"
           done
-      - name: Prepare the report for GitHub Pages
+      - name: Put the GitHub Pages site together
+        # The landing page at the root, the demo GIF next to it, and the report under report/.
+        if: ${{ !cancelled() && github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+        run: |
+          mkdir -p _site
+          cp site/index.html docs/media/wion-demo.gif _site/
+          cp -r playwright-report _site/report
+      - name: Prepare the site for GitHub Pages
         if: ${{ !cancelled() && github.event_name == 'push' && github.ref == 'refs/heads/main' }}
         uses: actions/upload-pages-artifact@v5
         with:
-          path: playwright-report/
+          path: _site/
 
   bug-report-demo:
     name: Bug-report demo
