@@ -1,0 +1,242 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Wion-Pilot</title>
+    <meta
+      name="description"
+      content="AI-assisted test automation for web apps: map the screens, record scenarios by clicking, let an AI draft more, and approve every test."
+    />
+    <style>
+      :root {
+        --navy: #0f172a;
+        --green: #2f6b3a;
+        --mint: #86efac;
+        --bg: #ffffff;
+        --card: #f6f8fa;
+        --text: #1f2328;
+        --muted: #57606a;
+        --line: #d0d7de;
+        --link: #2f6b3a;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --bg: #0d1117;
+          --card: #161b22;
+          --text: #e6edf3;
+          --muted: #9da7b3;
+          --line: #30363d;
+          --link: #86efac;
+        }
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--text);
+        font:
+          17px/1.6 -apple-system,
+          BlinkMacSystemFont,
+          'Segoe UI',
+          Roboto,
+          Inter,
+          sans-serif;
+      }
+      a {
+        color: var(--link);
+      }
+      .wrap {
+        max-width: 1000px;
+        margin: 0 auto;
+        padding: 0 20px;
+      }
+      header {
+        background: radial-gradient(circle at 85% 20%, #1f4d2b 0%, var(--navy) 60%);
+        color: #fff;
+        padding: 56px 0 64px;
+      }
+      .tag {
+        color: var(--mint);
+        font-weight: 600;
+        font-size: 15px;
+      }
+      h1 {
+        font-size: clamp(40px, 8vw, 64px);
+        line-height: 1.1;
+        margin: 10px 0 12px;
+        letter-spacing: -0.02em;
+      }
+      .lead {
+        font-size: clamp(20px, 3.4vw, 26px);
+        color: #e2e8f0;
+        margin: 0 0 14px;
+      }
+      header p {
+        max-width: 720px;
+        color: #cbd5e1;
+      }
+      .buttons {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+        margin-top: 26px;
+      }
+      .button {
+        display: inline-block;
+        padding: 11px 18px;
+        border-radius: 8px;
+        font-weight: 600;
+        text-decoration: none;
+        border: 1px solid rgba(134, 239, 172, 0.55);
+        color: #dcfce7;
+      }
+      .button.primary {
+        background: var(--mint);
+        border-color: var(--mint);
+        color: var(--navy);
+      }
+      main section {
+        padding: 44px 0 8px;
+      }
+      h2 {
+        font-size: 26px;
+        margin: 0 0 18px;
+      }
+      figure {
+        margin: 0;
+      }
+      figure img {
+        display: block;
+        width: 100%;
+        height: auto;
+        border-radius: 10px;
+        border: 1px solid var(--line);
+        box-shadow: 0 18px 40px rgba(15, 23, 42, 0.25);
+      }
+      figcaption {
+        color: var(--muted);
+        font-size: 15px;
+        margin-top: 10px;
+      }
+      .cards {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+        gap: 16px;
+      }
+      .card {
+        background: var(--card);
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        padding: 18px 20px;
+      }
+      .card h3 {
+        margin: 0 0 6px;
+        font-size: 19px;
+      }
+      .card code {
+        font-size: 15px;
+        color: var(--muted);
+      }
+      .card p {
+        margin: 6px 0 0;
+      }
+      footer {
+        border-top: 1px solid var(--line);
+        margin-top: 48px;
+        padding: 22px 0 40px;
+        color: var(--muted);
+        font-size: 15px;
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <div class="wrap">
+        <div class="tag">Open source · MIT</div>
+        <h1>Wion-Pilot</h1>
+        <p class="lead">AI-assisted test automation for web apps.</p>
+        <p>
+          Wion-Pilot maps a web app's screens, records a scenario while you click through the app,
+          and lets an AI draft more. Nothing enters the test suite until a person approves it. The
+          tests are plain-language Gherkin running on Playwright, and every failure comes with a
+          bug-report draft.
+        </p>
+        <div class="buttons">
+          <a class="button primary" href="report/">Live test report</a>
+          <a class="button" href="https://github.com/hoopsmax/wion-pilot">Code on GitHub</a>
+          <a class="button" href="https://github.com/hoopsmax/wion-pilot#readme">Read the README</a>
+        </div>
+      </div>
+    </header>
+
+    <main class="wrap">
+      <section aria-labelledby="demo">
+        <h2 id="demo">See it work</h2>
+        <figure>
+          <img
+            src="wion-demo.gif"
+            width="960"
+            height="625"
+            alt="wion map, wion teach, and wion draft with wion review, run on the demo app"
+          />
+          <figcaption>
+            Real runs on the demo app, about 50 seconds: wion map; wion teach, with Playwright
+            playing the person; wion draft with Claude, then wion review.
+          </figcaption>
+        </figure>
+      </section>
+
+      <section aria-labelledby="what">
+        <h2 id="what">What it does</h2>
+        <div class="cards">
+          <div class="card">
+            <h3>Map</h3>
+            <code>wion map</code>
+            <p>
+              Crawls the app and lists every screen, form field and rule, with a Playwright locator
+              for each button, link and field. It never clicks or types anything apart from signing
+              in.
+            </p>
+          </div>
+          <div class="card">
+            <h3>Teach</h3>
+            <code>wion teach</code>
+            <p>
+              You click through the app in a browser, and each action becomes a step of a Gherkin
+              scenario. No AI, no cost.
+            </p>
+          </div>
+          <div class="card">
+            <h3>Draft and review</h3>
+            <code>wion draft · wion review</code>
+            <p>
+              An AI drafts scenarios from a topic or a code change, using only steps that already
+              exist. A person approves each one.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <section aria-labelledby="proof">
+        <h2 id="proof">Tested on every push</h2>
+        <p>
+          Everything is shown on Sprout, a small made-up plant-care app with the flows that are
+          hardest to test: offline mode, and two people editing the same plant. CI runs the whole
+          BDD suite on every push, and every failing test writes a bug-report draft. The report of
+          the latest run on <code>main</code> is published here:
+          <a href="report/">open the live test report</a>.
+        </p>
+      </section>
+    </main>
+
+    <footer>
+      <div class="wrap">
+        Open source under the MIT license ·
+        <a href="https://github.com/hoopsmax/wion-pilot">github.com/hoopsmax/wion-pilot</a>
+      </div>
+    </footer>
+  </body>
+</html>

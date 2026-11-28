@@ -12,6 +12,8 @@ node_modules/
 .features-gen/
 test-results/
 playwright-report/
+# The GitHub Pages site, put together by CI from site/, the GIF and the report.
+_site/
 blob-report/
 coverage/
 
